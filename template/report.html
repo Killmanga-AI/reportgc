@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Security Explain Plan</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-center {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 9pt;
+                color: #666;
+            }
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            font-size: 11pt;
+        }
+
+        /* Header */
+        .header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header img {
+            height: 50px;
+        }
+        .meta {
+            text-align: right;
+            font-size: 10pt;
+            color: #666;
+        }
+
+        /* Executive Summary */
+        .grade-section {
+            text-align: center;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+        .grade-letter {
+            font-size: 72pt;
+            font-weight: bold;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        .grade-label {
+            font-size: 18pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* The Explain Plan Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0 40px 0;
+        }
+        th {
+            background: #333;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 10pt;
+            text-transform: uppercase;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: top;
+        }
+        .row-critical { background-color: #fff5f5; }
+        .row-high { background-color: #fffdf5; }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-critical { background: #dc3545; }
+        .badge-high { background: #fd7e14; }
+
+        /* Findings Detail */
+        .finding-block {
+            page-break-inside: avoid;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .finding-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 5px;
+        }
+        .finding-meta {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .finding-desc {
+            font-size: 10pt;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1 style="margin:0;">Security Execution Plan</h1>
+            <p style="margin:0; color:#666;">Automated Analysis Report</p>
+        </div>
+        <div class="meta">
+            <p>Generated: {{ generated_at }}</p>
+            <p>ID: {{ summary.total_findings }} Findings Analyzed</p>
+        </div>
+    </div>
+
+    <div class="grade-section">
+        <div class="grade-letter" style="color: {{ grade_color }}">{{ grade }}</div>
+        <div class="grade-label" style="color: {{ grade_color }}">{{ grade_label }}</div>
+        <p>Security Posture Assessment</p>
+    </div>
+
+    <h2>Execution Strategy</h2>
+    <p>Resources are finite. This plan prioritizes fixes based on "System Load" (Risk) to optimize engineering effort.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th width="25%">Operation Type</th>
+                <th width="15%">Count</th>
+                <th width="30%">Action Plan</th>
+                <th width="30%">Estimated Load</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="row-critical">
+                <td>
+                    <strong>FULL TABLE SCAN</strong><br>
+                    <span style="font-size:9pt; color:#dc3545">Critical / CISA KEV</span>
+                </td>
+                <td style="font-weight:bold; font-size:14pt">{{ execution_plan.full_table_scans.count }}</td>
+                <td><strong>FIX THIS WEEK</strong><br>Immediate patch required</td>
+                <td>{{ execution_plan.full_table_scans.estimated_hours }} Hours</td>
+            </tr>
+            <tr class="row-high">
+                <td>
+                    <strong>INDEX RANGE SCAN</strong><br>
+                    <span style="font-size:9pt; color:#fd7e14">High Severity</span>
+                </td>
+                <td style="font-weight:bold; font-size:14pt">{{ execution_plan.index_scans.count }}</td>
+                <td><strong>NEXT SPRINT</strong><br>Schedule ticket</td>
+                <td>{{ execution_plan.index_scans.estimated_hours }} Hours</td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>SEQUENTIAL READ</strong><br>
+                    <span style="font-size:9pt; color:#666">Medium / Low</span>
+                </td>
+                <td>{{ execution_plan.low_priority.count }}</td>
+                <td><strong>BATCH / ACCEPT</strong><br>Review quarterly</td>
+                <td>Background Task</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Critical Findings (Immediate Action)</h2>
+    {% if execution_plan.full_table_scans.count == 0 %}
+        <p><em>No critical findings detected. Excellent work.</em></p>
+    {% else %}
+        {% for finding in execution_plan.full_table_scans.items %}
+        <div class="finding-block">
+            <div class="finding-title">
+                {{ finding.id }}: {{ finding.title }}
+                {% if finding.cisa_kev %}
+                    <span class="badge badge-critical">CISA KEV</span>
+                {% endif %}
+            </div>
+            <div class="finding-meta">
+                Package: {{ finding.pkg_name }} ({{ finding.installed_version }}) | 
+                CVSS: {{ finding.cvss_score }} | 
+                Fix: {{ finding.fixed_version or "No Patch Available" }}
+            </div>
+            <div class="finding-desc">
+                {{ finding.description|truncate(200) }}
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

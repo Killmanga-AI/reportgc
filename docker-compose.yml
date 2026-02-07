@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/exports  # Anonymous volume so exports don't clutter your host
+    environment:
+      - PYTHONUNBUFFERED=1
+
+
