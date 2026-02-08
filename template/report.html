@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Security Explain Plan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Execution Tool - ReportGC</title>
     <style>
         @page {
             size: A4;
@@ -15,193 +15,836 @@
             }
         }
         
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Helvetica, Arial, sans-serif;
-            line-height: 1.5;
-            color: #333;
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
             font-size: 11pt;
+            background: #ffffff;
         }
 
-        /* Header */
+        /* Header Section */
         .header {
-            border-bottom: 2px solid #333;
+            border-bottom: 3px solid #2c3e50;
             padding-bottom: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .header img {
-            height: 50px;
+        
+        .header-content h1 {
+            font-size: 28pt;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
         }
+        
+        .header-content .subtitle {
+            font-size: 12pt;
+            color: #7f8c8d;
+            font-weight: 400;
+        }
+        
         .meta {
             text-align: right;
             font-size: 10pt;
-            color: #666;
+            color: #7f8c8d;
+        }
+        
+        .meta p {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        
+        .meta strong {
+            color: #2c3e50;
         }
 
-        /* Executive Summary */
+        /* Executive Summary / Grade Section */
         .grade-section {
             text-align: center;
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 8px;
-            margin-bottom: 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 40px 30px;
+            border-radius: 12px;
+            margin-bottom: 50px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #dee2e6;
         }
+        
         .grade-letter {
-            font-size: 72pt;
-            font-weight: bold;
+            font-size: 84pt;
+            font-weight: 800;
             line-height: 1;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .grade-label {
+            font-size: 20pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
             margin-bottom: 10px;
         }
-        .grade-label {
-            font-size: 18pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+        
+        .grade-description {
+            font-size: 11pt;
+            color: #6c757d;
+            margin-top: 15px;
+            font-weight: 500;
         }
 
-        /* The Explain Plan Table */
+        /* Section Headers */
+        h2 {
+            font-size: 18pt;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        h3 {
+            font-size: 14pt;
+            font-weight: 600;
+            color: #34495e;
+            margin: 25px 0 15px 0;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        /* Execution Strategy Table */
+        .table-container {
+            overflow-x: auto;
+            margin: 25px 0 40px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-radius: 8px;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0 40px 0;
+            background: white;
         }
+        
         th {
-            background: #333;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
-            padding: 12px;
+            padding: 14px 12px;
             text-align: left;
             font-size: 10pt;
             text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
+        
         td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
+            padding: 14px 12px;
+            border-bottom: 1px solid #e9ecef;
             vertical-align: top;
+            font-size: 10pt;
         }
-        .row-critical { background-color: #fff5f5; }
-        .row-high { background-color: #fffdf5; }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .row-critical { 
+            background-color: #fff5f5;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .row-high { 
+            background-color: #fffdf5;
+            border-left: 4px solid #fd7e14;
+        }
+        
+        .row-medium {
+            background-color: #f8f9fa;
+            border-left: 4px solid #6c757d;
+        }
         
         /* Badges */
         .badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
             font-size: 8pt;
-            font-weight: bold;
+            font-weight: 700;
             color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
         }
-        .badge-critical { background: #dc3545; }
-        .badge-high { background: #fd7e14; }
+        
+        .badge-critical { 
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        }
+        
+        .badge-high { 
+            background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+            box-shadow: 0 2px 4px rgba(253, 126, 20, 0.3);
+        }
+        
+        .badge-medium {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+        }
+        
+        .badge-low {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
 
         /* Findings Detail */
+        .findings-section {
+            margin-top: 40px;
+        }
+        
         .finding-block {
             page-break-inside: avoid;
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #eee;
-            border-radius: 4px;
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            transition: box-shadow 0.2s ease;
         }
+        
+        .finding-block:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
         .finding-title {
-            font-weight: bold;
+            font-weight: 700;
             font-size: 12pt;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
+        
+        .finding-id {
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+            font-weight: 700;
+        }
+        
         .finding-meta {
             font-size: 9pt;
-            color: #666;
-            margin-bottom: 8px;
+            color: #6c757d;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 3px solid #6c757d;
         }
+        
+        .finding-meta-item {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .finding-meta strong {
+            color: #2c3e50;
+        }
+        
         .finding-desc {
             font-size: 10pt;
-            color: #444;
+            color: #495057;
+            line-height: 1.6;
+            padding: 10px 0;
+        }
+        
+        /* Summary Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32pt;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 10pt;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .empty-state-icon {
+            font-size: 48pt;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state-text {
+            font-size: 12pt;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+            text-align: center;
+            font-size: 9pt;
+            color: #6c757d;
+        }
+        
+        /* Print Optimization */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .finding-block {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+            
+            .stat-card {
+                box-shadow: none;
+            }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            body {
+                font-size: 10pt;
+            }
+            
+            .header-content h1 {
+                font-size: 24pt;
+            }
+            
+            .grade-letter {
+                font-size: 72pt;
+            }
+            
+            .grade-label {
+                font-size: 18pt;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            th {
+                font-size: 9pt;
+                padding: 12px 8px;
+            }
+            
+            td {
+                font-size: 9pt;
+                padding: 12px 8px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 10pt;
+                padding: 10px;
+            }
+            
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding-bottom: 15px;
+                margin-bottom: 30px;
+            }
+            
+            .header-content {
+                width: 100%;
+            }
+            
+            .header-content h1 {
+                font-size: 20pt;
+                margin-bottom: 6px;
+            }
+            
+            .header-content .subtitle {
+                font-size: 10pt;
+            }
+            
+            .meta {
+                text-align: center;
+                margin-top: 15px;
+                width: 100%;
+            }
+            
+            .grade-section {
+                padding: 30px 20px;
+                margin-bottom: 30px;
+            }
+            
+            .grade-letter {
+                font-size: 60pt;
+            }
+            
+            .grade-label {
+                font-size: 16pt;
+                letter-spacing: 2px;
+            }
+            
+            .grade-description {
+                font-size: 10pt;
+            }
+            
+            h2 {
+                font-size: 16pt;
+                margin: 30px 0 15px 0;
+            }
+            
+            h3 {
+                font-size: 13pt;
+                margin: 20px 0 12px 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin: 20px 0;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-number {
+                font-size: 28pt;
+            }
+            
+            .stat-label {
+                font-size: 9pt;
+            }
+            
+            /* Mobile-friendly table */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 20px -10px;
+            }
+            
+            table {
+                min-width: 600px;
+            }
+            
+            th {
+                font-size: 8pt;
+                padding: 10px 6px;
+                white-space: nowrap;
+            }
+            
+            td {
+                font-size: 9pt;
+                padding: 10px 6px;
+            }
+            
+            td strong {
+                font-size: 10pt;
+            }
+            
+            /* Stack badges vertically on mobile */
+            .finding-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .finding-title > div {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            
+            .finding-block {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .finding-title {
+                font-size: 11pt;
+            }
+            
+            .finding-meta {
+                font-size: 8pt;
+                padding: 8px;
+            }
+            
+            .finding-meta-item {
+                display: block;
+                margin-right: 0;
+                margin-bottom: 6px;
+            }
+            
+            .finding-desc {
+                font-size: 9pt;
+            }
+            
+            .badge {
+                padding: 3px 8px;
+                font-size: 7pt;
+            }
+            
+            .empty-state {
+                padding: 30px 15px;
+            }
+            
+            .empty-state-icon {
+                font-size: 36pt;
+            }
+            
+            .empty-state-text {
+                font-size: 10pt;
+            }
+            
+            /* Alert boxes on mobile */
+            p[style*="background"] {
+                padding: 12px !important;
+                font-size: 9pt !important;
+            }
+            
+            /* Recommendations section */
+            div[style*="background: #f8f9fa"] {
+                padding: 15px !important;
+            }
+            
+            div[style*="background: #f8f9fa"] ul {
+                margin-left: 15px;
+                font-size: 9pt;
+            }
+            
+            .footer {
+                margin-top: 40px;
+                padding-top: 15px;
+                font-size: 8pt;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .header-content h1 {
+                font-size: 18pt;
+            }
+            
+            .header-content .subtitle {
+                font-size: 9pt;
+            }
+            
+            .grade-section {
+                padding: 25px 15px;
+            }
+            
+            .grade-letter {
+                font-size: 48pt;
+            }
+            
+            .grade-label {
+                font-size: 14pt;
+                letter-spacing: 1px;
+            }
+            
+            h2 {
+                font-size: 14pt;
+            }
+            
+            .stat-number {
+                font-size: 24pt;
+            }
+            
+            .finding-id {
+                display: block;
+                margin-bottom: 5px;
+            }
+        }
+        
+        /* Ensure everything stays aligned */
+        * {
+            box-sizing: border-box;
+        }
+        
+        /* Prevent horizontal scroll */
+        body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
+        /* Ensure images don't break layout */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* Long words shouldn't break layout */
+        .finding-title,
+        .finding-desc,
+        .finding-meta {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+        
+        /* Ensure code-like text wraps */
+        .finding-id,
+        code,
+        pre {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
     </style>
 </head>
 <body>
+    <!-- Header -->
     <div class="header">
-        <div>
-            <h1 style="margin:0;">Security Execution Plan</h1>
-            <p style="margin:0; color:#666;">Automated Analysis Report</p>
+        <div class="header-content">
+            <h1>Security Execution Plan</h1>
+            <p class="subtitle">Comprehensive Vulnerability Assessment & Remediation Strategy</p>
         </div>
         <div class="meta">
-            <p>Generated: {{ generated_at }}</p>
-            <p>ID: {{ summary.total_findings }} Findings Analyzed</p>
+            <p><strong>Generated:</strong> {{ generated_at }}</p>
+            <p><strong>Report ID:</strong> ReportGC-{{ report_id }}</p>
+            <p><strong>Total Findings:</strong> {{ summary.total_findings }}</p>
         </div>
     </div>
 
+    <!-- Executive Summary -->
     <div class="grade-section">
         <div class="grade-letter" style="color: {{ grade_color }}">{{ grade }}</div>
         <div class="grade-label" style="color: {{ grade_color }}">{{ grade_label }}</div>
-        <p>Security Posture Assessment</p>
+        <p class="grade-description">Security Posture Assessment</p>
     </div>
 
-    <h2>Execution Strategy</h2>
-    <p>Resources are finite. This plan prioritizes fixes based on "System Load" (Risk) to optimize engineering effort.</p>
-    
-    <table>
-        <thead>
-            <tr>
-                <th width="25%">Operation Type</th>
-                <th width="15%">Count</th>
-                <th width="30%">Action Plan</th>
-                <th width="30%">Estimated Load</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="row-critical">
-                <td>
-                    <strong>FULL TABLE SCAN</strong><br>
-                    <span style="font-size:9pt; color:#dc3545">Critical / CISA KEV</span>
-                </td>
-                <td style="font-weight:bold; font-size:14pt">{{ execution_plan.full_table_scans.count }}</td>
-                <td><strong>FIX THIS WEEK</strong><br>Immediate patch required</td>
-                <td>{{ execution_plan.full_table_scans.estimated_hours }} Hours</td>
-            </tr>
-            <tr class="row-high">
-                <td>
-                    <strong>INDEX RANGE SCAN</strong><br>
-                    <span style="font-size:9pt; color:#fd7e14">High Severity</span>
-                </td>
-                <td style="font-weight:bold; font-size:14pt">{{ execution_plan.index_scans.count }}</td>
-                <td><strong>NEXT SPRINT</strong><br>Schedule ticket</td>
-                <td>{{ execution_plan.index_scans.estimated_hours }} Hours</td>
-            </tr>
-            <tr>
-                <td>
-                    <strong>SEQUENTIAL READ</strong><br>
-                    <span style="font-size:9pt; color:#666">Medium / Low</span>
-                </td>
-                <td>{{ execution_plan.low_priority.count }}</td>
-                <td><strong>BATCH / ACCEPT</strong><br>Review quarterly</td>
-                <td>Background Task</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h2>Critical Findings (Immediate Action)</h2>
-    {% if execution_plan.full_table_scans.count == 0 %}
-        <p><em>No critical findings detected. Excellent work.</em></p>
-    {% else %}
-        {% for finding in execution_plan.full_table_scans.items %}
-        <div class="finding-block">
-            <div class="finding-title">
-                {{ finding.id }}: {{ finding.title }}
-                {% if finding.cisa_kev %}
-                    <span class="badge badge-critical">CISA KEV</span>
-                {% endif %}
-            </div>
-            <div class="finding-meta">
-                Package: {{ finding.pkg_name }} ({{ finding.installed_version }}) | 
-                CVSS: {{ finding.cvss_score }} | 
-                Fix: {{ finding.fixed_version or "No Patch Available" }}
-            </div>
-            <div class="finding-desc">
-                {{ finding.description|truncate(200) }}
-            </div>
+    <!-- Summary Statistics -->
+    <h2>Executive Summary</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" style="color: #dc3545;">{{ execution_plan.full_table_scans.count }}</div>
+            <div class="stat-label">Critical Findings</div>
         </div>
-        {% endfor %}
-    {% endif %}
+        <div class="stat-card">
+            <div class="stat-number" style="color: #fd7e14;">{{ execution_plan.index_scans.count }}</div>
+            <div class="stat-label">High Severity</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color: #6c757d;">{{ execution_plan.low_priority.count }}</div>
+            <div class="stat-label">Medium/Low</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color: #2c3e50;">{{ total_effort_hours }}</div>
+            <div class="stat-label">Est. Hours</div>
+        </div>
+    </div>
+
+    <!-- Execution Strategy -->
+    <h2>Execution Strategy</h2>
+    <p>Resources are finite. This plan prioritizes remediation based on risk severity and exploitability to optimize engineering effort and maximize security impact. The strategy follows a database query optimization metaphor where critical vulnerabilities are treated as "full table scans" requiring immediate attention.</p>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th width="25%">Operation Type</th>
+                    <th width="12%">Count</th>
+                    <th width="28%">Action Plan</th>
+                    <th width="20%">Estimated Load</th>
+                    <th width="15%">Timeline</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="row-critical">
+                    <td>
+                        <strong>FULL TABLE SCAN</strong><br>
+                        <span style="font-size:9pt; color:#dc3545">Critical / CISA KEV</span>
+                    </td>
+                    <td style="font-weight:bold; font-size:16pt; color:#dc3545;">{{ execution_plan.full_table_scans.count }}</td>
+                    <td>
+                        <strong>FIX THIS WEEK</strong><br>
+                        <span style="font-size:9pt;">Immediate patch required. Active exploitation likely.</span>
+                    </td>
+                    <td><strong>{{ execution_plan.full_table_scans.estimated_hours }} Hours</strong></td>
+                    <td><span class="badge badge-critical">Urgent</span></td>
+                </tr>
+                <tr class="row-high">
+                    <td>
+                        <strong>INDEX RANGE SCAN</strong><br>
+                        <span style="font-size:9pt; color:#fd7e14">High Severity</span>
+                    </td>
+                    <td style="font-weight:bold; font-size:16pt; color:#fd7e14;">{{ execution_plan.index_scans.count }}</td>
+                    <td>
+                        <strong>NEXT SPRINT</strong><br>
+                        <span style="font-size:9pt;">Schedule ticket. Patch within 30 days.</span>
+                    </td>
+                    <td><strong>{{ execution_plan.index_scans.estimated_hours }} Hours</strong></td>
+                    <td><span class="badge badge-high">High</span></td>
+                </tr>
+                <tr class="row-medium">
+                    <td>
+                        <strong>SEQUENTIAL READ</strong><br>
+                        <span style="font-size:9pt; color:#6c757d">Medium / Low Severity</span>
+                    </td>
+                    <td style="font-size:14pt; color:#6c757d;">{{ execution_plan.low_priority.count }}</td>
+                    <td>
+                        <strong>BATCH / ACCEPT RISK</strong><br>
+                        <span style="font-size:9pt;">Review quarterly or accept as residual risk.</span>
+                    </td>
+                    <td>Background Task</td>
+                    <td><span class="badge badge-low">Low</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Critical Findings Section -->
+    <div class="findings-section">
+        <h2>Critical Findings (Immediate Action Required)</h2>
+        {% if execution_plan.full_table_scans.count == 0 %}
+            <div class="empty-state">
+                <div class="empty-state-icon">✓</div>
+                <p class="empty-state-text">No critical findings detected. Excellent security posture maintained.</p>
+            </div>
+        {% else %}
+            <p style="color: #dc3545; font-weight: 600; background: #fff5f5; padding: 15px; border-radius: 6px; border-left: 4px solid #dc3545;">
+                ⚠️ <strong>{{ execution_plan.full_table_scans.count }}</strong> critical vulnerabilities require immediate remediation. These findings represent active security risks and may be listed in CISA's Known Exploited Vulnerabilities catalog.
+            </p>
+            
+            {% for finding in execution_plan.full_table_scans.items %}
+            <div class="finding-block">
+                <div class="finding-title">
+                    <span><span class="finding-id">{{ finding.id }}</span>: {{ finding.title }}</span>
+                    <div>
+                        {% if finding.cisa_kev %}
+                            <span class="badge badge-critical">CISA KEV</span>
+                        {% endif %}
+                        <span class="badge badge-critical">Critical</span>
+                    </div>
+                </div>
+                <div class="finding-meta">
+                    <div class="finding-meta-item"><strong>Package:</strong> {{ finding.pkg_name }}</div>
+                    <div class="finding-meta-item"><strong>Installed:</strong> {{ finding.installed_version }}</div>
+                    <div class="finding-meta-item"><strong>CVSS Score:</strong> {{ finding.cvss_score }}</div>
+                    <div class="finding-meta-item"><strong>Fix Available:</strong> {{ finding.fixed_version or "No Patch Available" }}</div>
+                </div>
+                <div class="finding-desc">
+                    {{ finding.description|truncate(300) }}
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- High Severity Findings Section -->
+    <div class="findings-section">
+        <h2>High Severity Findings (Schedule for Next Sprint)</h2>
+        {% if execution_plan.index_scans.count == 0 %}
+            <div class="empty-state">
+                <div class="empty-state-icon">✓</div>
+                <p class="empty-state-text">No high severity findings detected.</p>
+            </div>
+        {% else %}
+            <p style="color: #fd7e14; font-weight: 600; background: #fffdf5; padding: 15px; border-radius: 6px; border-left: 4px solid #fd7e14;">
+                <strong>{{ execution_plan.index_scans.count }}</strong> high severity vulnerabilities should be addressed in the next sprint cycle.
+            </p>
+            
+            {% for finding in execution_plan.index_scans.items %}
+            <div class="finding-block">
+                <div class="finding-title">
+                    <span><span class="finding-id">{{ finding.id }}</span>: {{ finding.title }}</span>
+                    <div>
+                        <span class="badge badge-high">High</span>
+                    </div>
+                </div>
+                <div class="finding-meta">
+                    <div class="finding-meta-item"><strong>Package:</strong> {{ finding.pkg_name }}</div>
+                    <div class="finding-meta-item"><strong>Installed:</strong> {{ finding.installed_version }}</div>
+                    <div class="finding-meta-item"><strong>CVSS Score:</strong> {{ finding.cvss_score }}</div>
+                    <div class="finding-meta-item"><strong>Fix Available:</strong> {{ finding.fixed_version or "No Patch Available" }}</div>
+                </div>
+                <div class="finding-desc">
+                    {{ finding.description|truncate(300) }}
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Recommendations Section -->
+    <h2>Recommendations & Next Steps</h2>
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #2c3e50;">
+        <h3 style="margin-top: 0;">Immediate Actions</h3>
+        <ul style="margin-left: 20px; line-height: 1.8;">
+            <li>Address all <strong style="color: #dc3545;">{{ execution_plan.full_table_scans.count }} critical findings</strong> within 7 days</li>
+            <li>Create tickets for <strong style="color: #fd7e14;">{{ execution_plan.index_scans.count }} high severity findings</strong> for next sprint</li>
+            <li>Review and document accepted risks for medium/low severity findings</li>
+            <li>Implement automated vulnerability scanning in CI/CD pipeline</li>
+            <li>Establish regular security review cadence (monthly recommended)</li>
+        </ul>
+        
+        <h3>Risk Mitigation Strategy</h3>
+        <ul style="margin-left: 20px; line-height: 1.8;">
+            <li>Prioritize CISA KEV vulnerabilities - these have confirmed exploitation in the wild</li>
+            <li>Apply defense-in-depth controls while patches are being deployed</li>
+            <li>Monitor security advisories for newly disclosed vulnerabilities</li>
+            <li>Conduct post-remediation validation testing</li>
+        </ul>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p><strong>ReportGC Security Analysis</strong> | Generated {{ generated_at }} | Confidential</p>
+        <p>This report contains sensitive security information. Handle according to your organization's data classification policy.</p>
+    </div>
 </body>
 </html>
