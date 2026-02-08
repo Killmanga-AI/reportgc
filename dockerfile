@@ -35,7 +35,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create the exports directory so FastAPI has permissions to write to it
-RUN mkdir -p exports && chmod 777 exports
+RUN mkdir -p static exports && chmod 755 static exports
+
 
 # Expose the port FastAPI runs on
 EXPOSE 8000
