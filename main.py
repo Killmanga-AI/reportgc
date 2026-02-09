@@ -83,222 +83,247 @@ async def home():
     """The upload interface"""
     return """
     <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ReportGC - Security Explain Plan</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { 
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 20px;
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReportGC - Security Explain Plan</title>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f2f7fc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #000;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 48px;
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid #d6e4f0;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: #4a4a4a;
+            margin-bottom: 32px;
+        }
+
+        .upload-box {
+            border: 2px dashed #9cc7eb;
+            padding: 40px 24px;
+            background: #f9fcff;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            text-align: center;
+        }
+
+        .upload-box:hover,
+        .upload-box.drag-over {
+            border-color: #4aa3df;
+            background: #eef6fd;
+        }
+
+        .upload-icon {
+            font-size: 36px;
+            color: #4aa3df;
+            margin-bottom: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: block;
+            font-size: 14px;
+            color: #000;
+            margin-bottom: 10px;
+        }
+
+        .selected-file {
+            font-size: 13px;
+            color: #4aa3df;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            background: #4aa3df;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background: #358cc7;
+        }
+
+        button:disabled {
+            background: #b9d7ef;
+            cursor: not-allowed;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin: 32px 0;
+        }
+
+        .feature {
+            border: 1px solid #d6e4f0;
+            padding: 14px;
+            font-size: 13px;
+            background: #ffffff;
+        }
+
+        .feature i {
+            color: #4aa3df;
+            margin-right: 6px;
+        }
+
+        .feature strong {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .footer {
+            font-size: 12.5px;
+            color: #555;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 28px 20px;
             }
-            .container { 
-                background: white; 
-                padding: 50px; 
-                border-radius: 20px; 
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                max-width: 600px;
-                width: 100%;
-                text-align: center;
+
+            h1 {
+                font-size: 22px;
             }
-            h1 { 
-                color: #2c3e50; 
-                margin-bottom: 10px;
-                font-size: 32px;
-                font-weight: 700;
-            }
-            .subtitle { 
-                color: #7f8c8d; 
-                margin-bottom: 40px;
-                font-size: 16px;
-            }
-            .upload-box { 
-                border: 3px dashed #cbd5e0; 
-                padding: 50px 30px; 
-                border-radius: 12px; 
-                transition: all 0.3s ease;
-                background: #f8f9fa;
-                cursor: pointer;
-            }
-            .upload-box:hover { 
-                border-color: #667eea; 
-                background: #f0f4ff;
-                transform: translateY(-2px);
-            }
-            .upload-box.drag-over {
-                border-color: #667eea;
-                background: #e8edff;
-            }
-            .upload-icon {
-                font-size: 48px;
-                color: #667eea;
-                margin-bottom: 15px;
-            }
-            input[type="file"] { 
-                display: none;
-            }
-            .file-label {
-                color: #495057;
-                font-weight: 500;
-                margin-bottom: 15px;
-                display: block;
-            }
-            .selected-file {
-                color: #667eea;
-                font-weight: 600;
-                margin-top: 15px;
-                font-size: 14px;
-            }
-            button { 
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white; 
-                padding: 16px 40px; 
-                border: none; 
-                border-radius: 8px; 
-                font-size: 16px;
-                font-weight: 600;
-                cursor: pointer; 
-                transition: all 0.2s;
-                margin-top: 25px;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            }
-            button:hover { 
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-            }
-            button:disabled {
-                background: #cbd5e0;
-                cursor: not-allowed;
-                box-shadow: none;
-                transform: none;
-            }
-            .footer { 
-                margin-top: 35px; 
-                color: #95a5a6; 
-                font-size: 13px;
-                line-height: 1.6;
-            }
-            .features {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 20px;
-                margin: 30px 0;
-                text-align: left;
-            }
-            .feature {
-                padding: 15px;
-                background: #f8f9fa;
-                border-radius: 8px;
-                font-size: 13px;
-            }
-            .feature strong {
-                color: #667eea;
-                display: block;
-                margin-bottom: 5px;
-            }
-            @media (max-width: 600px) {
-                .container { padding: 30px 20px; }
-                h1 { font-size: 24px; }
-                .features { grid-template-columns: 1fr; }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🛡️ ReportGC</h1>
-            <p class="subtitle">Convert Trivy Scans into Executive-Ready Security Reports</p>
-            
-            <form id="uploadForm" action="/analyze" method="post" enctype="multipart/form-data">
-                <div class="upload-box" id="uploadBox">
-                    <div class="upload-icon">📄</div>
-                    <label for="fileInput" class="file-label">
-                        Click to upload or drag & drop
-                    </label>
-                    <input type="file" id="fileInput" name="file" accept=".json" required>
-                    <div id="fileName" class="selected-file"></div>
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ReportGC</h1>
+        <p class="subtitle">Convert Trivy Scans into Executive-Ready Security Reports</p>
+
+        <form id="uploadForm" action="/analyze" method="post" enctype="multipart/form-data">
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">
+                    <i class="fa-solid fa-file-arrow-up"></i>
                 </div>
-                <button type="submit" id="submitBtn">Generate Reports</button>
-            </form>
-            
-            <div class="features">
-                <div class="feature">
-                    <strong>📊 PDF Report</strong>
-                    Professional security assessment document
-                </div>
-                <div class="feature">
-                    <strong>📽️ PPTX Deck</strong>
-                    Board-ready executive presentation
-                </div>
-                <div class="feature">
-                    <strong>🔒 Secure</strong>
-                    Files deleted after download
-                </div>
+                <label for="fileInput" class="file-label">
+                    Click to upload or drag & drop a JSON file
+                </label>
+                <input type="file" id="fileInput" name="file" accept=".json" required>
+                <div id="fileName" class="selected-file"></div>
             </div>
-            
-            <p class="footer">
-                Upload your Trivy JSON scan output to generate a comprehensive security execution plan.<br>
-                All processing happens locally. Files are automatically deleted after download.
-            </p>
+
+            <button type="submit" id="submitBtn">Generate Reports</button>
+        </form>
+
+        <div class="features">
+            <div class="feature">
+                <strong><i class="fa-solid fa-file-pdf"></i> PDF Report</strong>
+                Professional security assessment document
+            </div>
+            <div class="feature">
+                <strong><i class="fa-solid fa-chalkboard"></i> PPTX Deck</strong>
+                Executive-ready presentation format
+            </div>
+            <div class="feature">
+                <strong><i class="fa-solid fa-shield-halved"></i> Secure Processing</strong>
+                Files deleted after download
+            </div>
         </div>
 
-        <script>
-            const fileInput = document.getElementById('fileInput');
-            const uploadBox = document.getElementById('uploadBox');
-            const fileName = document.getElementById('fileName');
-            const submitBtn = document.getElementById('submitBtn');
-            const uploadForm = document.getElementById('uploadForm');
+        <p class="footer">
+            Upload your Trivy JSON scan output to generate a comprehensive security execution plan.<br>
+            All processing happens locally. Files are automatically deleted after download.
+        </p>
+    </div>
 
-            // Click to upload
-            uploadBox.addEventListener('click', () => fileInput.click());
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadBox = document.getElementById('uploadBox');
+        const fileName = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+        const uploadForm = document.getElementById('uploadForm');
 
-            // File selection
-            fileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    fileName.textContent = `Selected: ${file.name}`;
-                    submitBtn.disabled = false;
-                }
-            });
+        uploadBox.addEventListener('click', () => fileInput.click());
 
-            // Drag and drop
-            uploadBox.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadBox.classList.add('drag-over');
-            });
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = `Selected: ${file.name}`;
+                submitBtn.disabled = false;
+            }
+        });
 
-            uploadBox.addEventListener('dragleave', () => {
-                uploadBox.classList.remove('drag-over');
-            });
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.classList.add('drag-over');
+        });
 
-            uploadBox.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadBox.classList.remove('drag-over');
-                
-                const file = e.dataTransfer.files[0];
-                if (file && file.name.endsWith('.json')) {
-                    fileInput.files = e.dataTransfer.files;
-                    fileName.textContent = `Selected: ${file.name}`;
-                    submitBtn.disabled = false;
-                } else {
-                    alert('Please upload a JSON file');
-                }
-            });
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.classList.remove('drag-over');
+        });
 
-            // Form submission
-            uploadForm.addEventListener('submit', () => {
-                submitBtn.textContent = 'Analyzing...';
-                submitBtn.disabled = true;
-            });
-        </script>
-    </body>
-    </html>
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.classList.remove('drag-over');
+
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.json')) {
+                fileInput.files = e.dataTransfer.files;
+                fileName.textContent = `Selected: ${file.name}`;
+                submitBtn.disabled = false;
+            } else {
+                alert('Please upload a JSON file');
+            }
+        });
+
+        uploadForm.addEventListener('submit', () => {
+            submitBtn.textContent = 'Analyzing...';
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
     """
 
 @app.post("/analyze", response_class=HTMLResponse)
@@ -382,167 +407,192 @@ async def analyze_scan(file: UploadFile = File(...)):
         
         # 9. Return Results Page
         return f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Analysis Complete - ReportGC</title>
-            <style>
-                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-                body {{ 
-                    font-family: -apple-system, sans-serif; 
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }}
-                .card {{ 
-                    background: white; 
-                    padding: 50px; 
-                    border-radius: 20px; 
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    max-width: 700px;
-                    width: 100%;
-                    text-align: center;
-                }}
-                .grade-circle {{ 
-                    width: 140px; 
-                    height: 140px; 
-                    line-height: 140px; 
-                    border-radius: 50%; 
-                    background: {grade_color}; 
-                    color: white; 
-                    font-size: 72px; 
-                    font-weight: bold; 
-                    margin: 0 auto 30px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                }}
-                h1 {{ 
-                    color: #2c3e50; 
-                    margin-bottom: 10px;
-                    font-size: 32px;
-                }}
-                .subtitle {{
-                    color: #7f8c8d;
-                    margin-bottom: 30px;
-                    font-size: 14px;
-                }}
-                .stats {{ 
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                    gap: 20px;
-                    margin: 30px 0;
-                    padding: 30px;
-                    background: #f8f9fa;
-                    border-radius: 12px;
-                }}
-                .stat-box h3 {{ 
-                    margin: 0; 
-                    font-size: 36px; 
-                    color: #2c3e50;
-                    font-weight: 700;
-                }}
-                .stat-box p {{ 
-                    margin: 8px 0 0; 
-                    color: #7f8c8d; 
-                    font-size: 12px; 
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    font-weight: 600;
-                }}
-                .downloads {{
-                    margin: 35px 0;
-                }}
-                .btn {{ 
-                    display: inline-block; 
-                    margin: 10px; 
-                    padding: 16px 32px; 
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white; 
-                    text-decoration: none; 
-                    border-radius: 8px; 
-                    font-weight: 600;
-                    transition: all 0.2s;
-                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-                }}
-                .btn:hover {{
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-                }}
-                .btn-ppt {{ 
-                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                    box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
-                }}
-                .btn-ppt:hover {{
-                    box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
-                }}
-                .back-link {{
-                    margin-top: 30px;
-                    display: block;
-                }}
-                .back-link a {{
-                    color: #7f8c8d;
-                    text-decoration: none;
-                    font-size: 14px;
-                    transition: color 0.2s;
-                }}
-                .back-link a:hover {{
-                    color: #667eea;
-                }}
-                .icon {{
-                    margin-right: 8px;
-                }}
-                @media (max-width: 600px) {{
-                    .card {{ padding: 30px 20px; }}
-                    .grade-circle {{ width: 100px; height: 100px; line-height: 100px; font-size: 48px; }}
-                    h1 {{ font-size: 24px; }}
-                    .btn {{ display: block; margin: 10px 0; }}
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <div class="grade-circle">{data['grade']}</div>
-                <h1>✓ Analysis Complete</h1>
-                <p class="subtitle">Your security reports are ready for download</p>
-                
-                <div class="stats">
-                    <div class="stat-box">
-                        <h3>{data['summary']['total_findings']}</h3>
-                        <p>Total Issues</p>
-                    </div>
-                    <div class="stat-box">
-                        <h3 style="color: #dc3545">{data['summary']['critical']}</h3>
-                        <p>Critical</p>
-                    </div>
-                    <div class="stat-box">
-                        <h3 style="color: #fd7e14">{data['summary']['high']}</h3>
-                        <p>High Severity</p>
-                    </div>
-                    <div class="stat-box">
-                        <h3 style="color: #e74c3c">{data['summary']['cisa_kev_count']}</h3>
-                        <p>CISA KEV</p>
-                    </div>
-                </div>
+       <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Complete - ReportGC</title>
 
-                <div class="downloads">
-                    <a href="/download/{pdf_filename}" class="btn">
-                        <span class="icon">📄</span>Download PDF Report
-                    </a>
-                    <a href="/download/{pptx_filename}" class="btn btn-ppt">
-                        <span class="icon">📽️</span>Download Board Deck
-                    </a>
-                </div>
-                
-                <div class="back-link">
-                    <a href="/">← Analyze another scan</a>
-                </div>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f2f7fc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #000;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 48px;
+            max-width: 720px;
+            width: 100%;
+            border: 1px solid #d6e4f0;
+            text-align: center;
+        }
+
+        .grade-circle {
+            width: 120px;
+            height: 120px;
+            line-height: 120px;
+            margin: 0 auto 24px;
+            background: {grade_color};
+            color: #ffffff;
+            font-size: 56px;
+            font-weight: 700;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #4a4a4a;
+            margin-bottom: 28px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin: 28px 0;
+        }
+
+        .stat-box {
+            border: 1px solid #d6e4f0;
+            padding: 16px 12px;
+            background: #ffffff;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stat-box h3 {
+            font-size: clamp(22px, 4vw, 28px);
+            font-weight: 700;
+            line-height: 1.1;
+            max-width: 100%;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .stat-box p {
+            font-size: 11px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #555;
+            font-weight: 600;
+            text-align: center;
+        }
+        .downloads {
+            margin: 32px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            margin: 8px;
+            padding: 14px 28px;
+            background: #4aa3df;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #358cc7;
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        .back-link {
+            margin-top: 28px;
+        }
+
+        .back-link a {
+            font-size: 14px;
+            color: #4a4a4a;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .back-link a:hover {
+            color: #4aa3df;
+        }
+
+        @media (max-width: 600px) {
+            .card { padding: 28px 20px; }
+            .grade-circle {
+                width: 90px;
+                height: 90px;
+                line-height: 90px;
+                font-size: 42px;
+            }
+            h1 { font-size: 22px; }
+            .btn { display: block; margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="grade-circle">{data['grade']}</div>
+
+        <h1>Analysis Complete</h1>
+        <p class="subtitle">Your security reports are ready for download</p>
+
+        <div class="stats">
+            <div class="stat-box">
+                <h3>{data['summary']['total_findings']}</h3>
+                <p>Total Issues</p>
             </div>
-        </body>
-        </html>
+            <div class="stat-box">
+                <h3 style="color:#dc3545">{data['summary']['critical']}</h3>
+                <p>Critical</p>
+            </div>
+            <div class="stat-box">
+                <h3 style="color:#fd7e14">{data['summary']['high']}</h3>
+                <p>High Severity</p>
+            </div>
+            <div class="stat-box">
+                <h3 style="color:#c0392b">{data['summary']['cisa_kev_count']}</h3>
+                <p>CISA KEV</p>
+            </div>
+        </div>
+
+        <div class="downloads">
+            <a href="/download/{pdf_filename}" class="btn">
+                <i class="fa-solid fa-file-pdf"></i> Download PDF Report
+            </a>
+            <a href="/download/{pptx_filename}" class="btn">
+                <i class="fa-solid fa-chalkboard"></i> Download Board Deck
+            </a>
+        </div>
+
+        <div class="back-link">
+            <a href="/"><i class="fa-solid fa-arrow-left"></i> Analyze another scan</a>
+        </div>
+    </div>
+</body>
+</html>
         """
     
     except HTTPException:
