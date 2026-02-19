@@ -1,165 +1,143 @@
-from weasyprint import HTML
-from jinja2 import Environment, FileSystemLoader
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.enum.text import PP_ALIGN
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any
 
+class PPTXGenerator:
+    def __init__(self, master_pptx: Path = None):
+        self.prs = Presentation(str(master_pptx)) if master_pptx and master_pptx.exists() else Presentation()
+        self.prs.slide_width = Inches(13.333)
+        self.prs.slide_height = Inches(7.5)
 
-class ReportGenerator:
-    """
-    ReportGC – PDF/HTML rendering stage
+    def _get_color(self, grade: str) -> RGBColor:
+        colors = {
+            'A': RGBColor(40, 167, 69), 'B': RGBColor(108, 117, 125),
+            'C': RGBColor(255, 193, 7), 'D': RGBColor(253, 126, 20),
+            'F': RGBColor(220, 53, 69)
+        }
+        return colors.get(grade, RGBColor(0, 0, 0))
 
-    Responsibilities:
-    - Enforce data contract for templates
-    - Perform final, presentation-safe calculations
-    - Render HTML → PDF using WeasyPrint
-    - Never re-interpret security logic (engine owns that)
-    """
+    def _ensure_data_structure(self, data: dict) -> dict:
+        """Sanitizes input data for slide stability."""
+        data.setdefault('grade', 'F')
+        data.setdefault('generated_at', datetime.now().strftime('%Y-%m-%d %H:%M'))
+        data.setdefault('summary', {'total_findings': 0})
+        
+        ep = data.setdefault('execution_plan', {})
+        for section in ['full_table_scans', 'index_scans', 'low_priority']:
+            ep.setdefault(section, {'count': 0, 'estimated_hours': 0, 'items': []})
+        return data
 
-    TEMPLATE_NAME = "report.html"
+    def generate_pptx(self, data: dict, output_path: str):
+        data = self._ensure_data_structure(data)
+        self._add_title_slide(data)
+        self._add_matrix_slide(data)
+        self._add_critical_detail_slide(data)
+        self._add_roadmap_slide(data)
+        self.prs.save(output_path)
+        print(f"PPTX generated: {output_path}")
 
-    GRADE_STYLES = {
-        "A": {"color": "#28a745", "label": "EXCELLENT"},
-        "B": {"color": "#6c757d", "label": "GOOD"},
-        "C": {"color": "#ffc107", "label": "FAIR"},
-        "D": {"color": "#fd7e14", "label": "POOR"},
-        "F": {"color": "#dc3545", "label": "CRITICAL"},
-    }
+    def _add_title_slide(self, data):
+        slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
+        color = self._get_color(data['grade'])
 
-    EXECUTION_PLAN_KEYS = (
-        "full_table_scans",
-        "index_scans",
-        "low_priority",
-    )
+        # Brief Title
+        title = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(12), Inches(1.5))
+        p = title.text_frame.paragraphs[0]
+        p.text = "Security Posture: Executive Brief"
+        p.font.size, p.font.bold, p.alignment = Pt(44), True, PP_ALIGN.CENTER
 
-    def __init__(self, template_dir: Path, static_dir: Path):
-        self.template_dir = template_dir
-        self.static_dir = static_dir
+        # Grade Letter
+        grade_box = slide.shapes.add_textbox(Inches(4), Inches(2.5), Inches(5), Inches(2.5))
+        p = grade_box.text_frame.paragraphs[0]
+        p.text = data['grade']
+        p.font.size, p.font.bold, p.font.color.rgb, p.alignment = Pt(180), True, color, PP_ALIGN.CENTER
 
-        self.env = Environment(
-            loader=FileSystemLoader(str(template_dir)),
-            autoescape=True
-        )
+        # Metadata
+        footer = slide.shapes.add_textbox(Inches(0.5), Inches(6.5), Inches(12), Inches(0.8))
+        p = footer.text_frame.paragraphs[0]
+        p.text = f"Report ID: {data.get('report_id', 'INTERNAL')} | Findings: {data['summary']['total_findings']}"
+        p.font.size, p.alignment = Pt(14), PP_ALIGN.CENTER
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
+    def _add_matrix_slide(self, data):
+        slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
+        plan = data['execution_plan']
+        
+        title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1))
+        title.text_frame.text = "Security Explain Plan: Resource Allocation"
+        
+        rows = [
+            ("FULL TABLE SCAN", plan['full_table_scans'], RGBColor(220, 53, 69), "IMMEDIATE"),
+            ("INDEX RANGE SCAN", plan['index_scans'], RGBColor(253, 126, 20), "NEXT SPRINT"),
+            ("DEFERRED OPERATIONS", plan['low_priority'], RGBColor(108, 117, 125), "BACKLOG")
+        ]
 
-    def generate_pdf(self, data: Dict[str, Any], output_path: Path) -> None:
-        """
-        Render report.html → PDF
-        """
-        payload = self._prepare_payload(data)
-        html = self._render_html(payload)
+        for i, (label, section, color, priority) in enumerate(rows):
+            y = 1.8 + (i * 1.7)
+            shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.7), Inches(y), Inches(11.9), Inches(1.4))
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = RGBColor(250, 250, 250)
+            shape.line.color.rgb, shape.line.width = color, Pt(2)
+            
+            tf = shape.text_frame
+            tf.paragraphs[0].text = f"{label} ({priority})"
+            tf.paragraphs[0].font.size, tf.paragraphs[0].font.bold, tf.paragraphs[0].font.color.rgb = Pt(18), True, color
+            
+            p2 = tf.add_paragraph()
+            p2.text = f"{section['count']} Findings | {section['estimated_hours']}h Estimated Effort"
+            p2.font.size = Pt(24)
 
-        HTML(
-            string=html,
-            base_url=str(self.static_dir.resolve())
-        ).write_pdf(str(output_path))
-
-    def generate_html(self, data: Dict[str, Any], output_path: Path) -> None:
-        """
-        Debug-only: Render report.html → HTML
-        """
-        payload = self._prepare_payload(data)
-        html = self._render_html(payload)
-
-        output_path.write_text(html, encoding="utf-8")
-
-    # ------------------------------------------------------------------
-    # Internal Pipeline
-    # ------------------------------------------------------------------
-
-    def _prepare_payload(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Final sanitation & enrichment layer before rendering.
-        """
-        payload = dict(data)  # shallow copy for safety
-
-        self._ensure_metadata(payload)
-        self._ensure_execution_plan(payload)
-        self._apply_grade_styling(payload)
-        self._ensure_effort_hours(payload)
-        self._resolve_assets(payload)
-
-        return payload
-
-    def _render_html(self, payload: Dict[str, Any]) -> str:
-        template = self.env.get_template(self.TEMPLATE_NAME)
-        return template.render(payload)
-
-    # ------------------------------------------------------------------
-    # Enforcement & Normalization
-    # ------------------------------------------------------------------
-
-    def _ensure_metadata(self, data: Dict[str, Any]) -> None:
-        now = datetime.now()
-        data.setdefault("generated_at", now.strftime("%Y-%m-%d %H:%M:%S"))
-        data.setdefault("report_id", now.strftime("%Y%m%d-%H%M%S"))
-
-        data.setdefault(
-            "summary",
-            {
-                "total_findings": 0,
-                "critical": 0,
-                "high": 0,
-                "medium": 0,
-                "low": 0,
-                "cisa_kev_count": 0,
-            },
-        )
-
-    def _ensure_execution_plan(self, data: Dict[str, Any]) -> None:
-        """
-        Locks the execution_plan schema used by templates.
-        """
-        execution_plan = data.setdefault("execution_plan", {})
-
-        for key in self.EXECUTION_PLAN_KEYS:
-            execution_plan.setdefault(
-                key,
-                {
-                    "count": 0,
-                    "estimated_hours": 0,
-                    "items": [],
-                },
-            )
-
-    def _apply_grade_styling(self, data: Dict[str, Any]) -> None:
-        """
-        Single source of truth for grade visuals.
-        """
-        grade = data.get("grade", "F")
-        style = self.GRADE_STYLES.get(grade, self.GRADE_STYLES["F"])
-
-        data["grade"] = grade
-        data["grade_color"] = style["color"]
-        data["grade_label"] = style["label"]
-
-    def _ensure_effort_hours(self, data: Dict[str, Any]) -> None:
-        """
-        Uses engine-provided total if present.
-        Otherwise derives it safely.
-        """
-        if "total_effort_hours" in data:
+    def _add_critical_detail_slide(self, data):
+        slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
+        items = data['execution_plan']['full_table_scans']['items']
+        
+        # Title
+        title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1))
+        title.text_frame.text = "Critical Risk Path"
+        
+        if not items:
+            msg = slide.shapes.add_textbox(Inches(2), Inches(3), Inches(9), Inches(1))
+            msg.text_frame.text = "No Critical Findings Identified"
             return
 
-        execution_plan = data["execution_plan"]
+        y = 1.6
+        for item in items[:3]:
+            box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.7), Inches(y), Inches(11.9), Inches(1.4))
+            box.fill.solid()
+            box.fill.fore_color.rgb = RGBColor(255, 245, 245)
+            
+            tf = box.text_frame
+            p1 = tf.paragraphs[0]
+            kev = "[CISA KEV] " if item.get('cisa_kev') else ""
+            raw_title = item.get('title', '')
+            title = (raw_title[:77] + '...') if len(raw_title) > 80 else raw_title
+            p1.text = f"{kev}{item.get('id')}: {title}"
+            p1.font.size, p1.font.bold, p1.font.color.rgb = Pt(16), True, RGBColor(220, 53, 69)
+            
+            p2 = tf.add_paragraph()
+            p2.text = f"Package: {item.get('pkg_name')} | Fix: {item.get('fixed_version') or 'Contact Vendor'}"
+            p2.font.size = Pt(20)
+            y += 1.6
 
-        total = 0
-        for section in execution_plan.values():
-            if isinstance(section, dict):
-                total += section.get("estimated_hours", 0)
+    def _add_roadmap_slide(self, data):
+        slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
+        slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1)).text_frame.text = "Remediation Roadmap"
+        
+        # Simple timeline logic
+        y = 1.8
+        crit = data['execution_plan']['full_table_scans']['count']
+        high = data['execution_plan']['index_scans']['count']
 
-        data["total_effort_hours"] = total
-
-    def _resolve_assets(self, data: Dict[str, Any]) -> None:
-        """
-        Resolve static assets safely for WeasyPrint.
-        """
-        logo_path = self.static_dir / "logo.png"
-        data["logo_url"] = (
-            logo_path.resolve().as_uri()
-            if logo_path.exists()
-            else None
-        )
+        for phase, detail in [
+            ("Phase 1", f"Address {crit} Critical Findings"),
+            ("Phase 2", f"Remediate {high} High-Risk Issues"),
+            ("Phase 3", "Ongoing Monitoring & Hardening")
+        ]:
+            shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1), Inches(y), Inches(11), Inches(1.2))
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = RGBColor(240, 240, 240)
+            shape.text_frame.text = f"{phase}: {detail}"
+            y += 1.5
