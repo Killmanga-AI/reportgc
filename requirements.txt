@@ -1,98 +1,59 @@
-# ReportGC - Security Reporting Pipeline
-# Requirements file for production and development
+# ReportGC - FastAPI Edition Requirements
 
 # ============================================
 # CORE DEPENDENCIES (Required)
 # ============================================
 
-# Data handling and validation
+# Data handling
 dataclasses>=0.6; python_version < "3.7"
 typing-extensions>=4.0.0; python_version < "3.10"
+pydantic>=2.0.0,<3.0.0      # Data validation (FastAPI uses this)
 
 # HTML/PDF Generation
-# WeasyPrint requires system libraries: libcairo2, libpango-1.0-0, libffi-dev
-WeasyPrint>=60.0,<62.0      # PDF generation from HTML/CSS
-Jinja2>=3.1.0,<4.0.0         # Template engine for report.html
-MarkupSafe>=2.1.0            # Jinja2 dependency for safe string handling
+WeasyPrint>=60.0,<62.0
+Jinja2>=3.1.0,<4.0.0
+MarkupSafe>=2.1.0
 
 # Presentation Generation
-python-pptx>=0.6.21,<1.0.0   # PowerPoint .pptx file creation
-Pillow>=9.0.0                # Image handling for PPTX (optional but recommended)
-lxml>=4.9.0                  # XML handling, required by python-pptx
-
-# File and Path handling
-pathlib>=1.0.1; python_version < "3.4"
+python-pptx>=0.6.21,<1.0.0
+Pillow>=9.0.0
+lxml>=4.9.0
 
 # ============================================
-# WEB FRAMEWORK SUPPORT (Optional)
+# FASTAPI STACK (Web Framework)
 # ============================================
 
-# For Flask API integration
-Flask>=2.0.0,<3.0.0          # Web framework for REST API
-Werkzeug>=2.0.0,<3.0.0       # WSGI utilities
+fastapi>=0.100.0,<1.0.0     # Modern, fast web framework
+uvicorn[standard]>=0.23.0   # ASGI server with uvloop, httptools
+python-multipart>=0.0.6    # File upload support
 
-# For FastAPI integration (alternative to Flask)
-# fastapi>=0.95.0,<1.0.0
-# uvicorn>=0.20.0,<1.0.0     # ASGI server for FastAPI
-
-# ============================================
-# ASYNC PROCESSING (Optional - for production scaling)
-# ============================================
-
-# Celery for background task processing
-# celery>=5.2.0,<6.0.0
-# redis>=4.5.0               # Celery broker/result backend
-
-# Alternative: RQ (Redis Queue) - simpler than Celery
-# rq>=1.13.0,<2.0.0
+# Optional: Alternative ASGI servers
+# hypercorn>=0.14.0        # HTTP/2 support
+# daphne>=4.0.0            # Django Channels compatible
 
 # ============================================
-# MONITORING & LOGGING (Optional - production)
+# ASYNC PROCESSING (Optional)
 # ============================================
 
-# Structured logging
-# structlog>=23.0.0,<24.0.0
-
-# Application monitoring
-# sentry-sdk>=1.20.0,<2.0.0  # Error tracking
+# celery>=5.3.0,<6.0.0     # Distributed task queue
+# redis>=4.6.0              # Celery broker/result backend
+# flower>=2.0.0            # Celery monitoring (use mher/flower image instead)
 
 # ============================================
-# DEVELOPMENT & TESTING (Optional - dev only)
+# DEVELOPMENT & TESTING
 # ============================================
 
-# Testing framework
-pytest>=7.0.0,<8.0.0          # Unit testing
-pytest-cov>=4.0.0,<5.0.0       # Coverage reporting
-pytest-xdist>=3.0.0,<4.0.0     # Parallel test execution
-
-# Code quality
-black>=23.0.0,<24.0.0          # Code formatting
-flake8>=6.0.0,<7.0.0           # Linting
-mypy>=1.0.0,<2.0.0             # Static type checking
-
-# Development utilities
-python-dotenv>=1.0.0,<2.0.0    # Environment variable management
-ipython>=8.0.0,<9.0.0          # Enhanced REPL for debugging
+pytest>=7.0.0,<8.0.0
+pytest-asyncio>=0.21.0     # Async test support for FastAPI
+pytest-cov>=4.0.0,<5.0.0
+httpx>=0.24.0              # TestClient for FastAPI
+black>=23.0.0,<24.0.0
+flake8>=6.0.0,<7.0.0
+mypy>=1.0.0,<2.0.0
 
 # ============================================
-# DOCUMENTATION (Optional)
+# REMOVED (Flask-specific, not needed)
 # ============================================
-
-# Sphinx for documentation generation
-# Sphinx>=6.0.0,<7.0.0
-# sphinx-rtd-theme>=1.2.0      # ReadTheDocs theme
-
-# ============================================
-# SYSTEM REQUIREMENTS NOTES
-# ============================================
-
-# WeasyPrint System Dependencies (Ubuntu/Debian):
-#   sudo apt-get install -y libcairo2 libpango-1.0-0 libffi-dev libgdk-pixbuf2.0-0
-
-# WeasyPrint System Dependencies (macOS):
-#   brew install cairo pango gdk-pixbuf libffi
-
-# WeasyPrint System Dependencies (RHEL/CentOS/Fedora):
-#   sudo dnf install cairo pango gdk-pixbuf2 libffi
-
-# Python Version: 3.8+ (3.11 recommended for performance)
+# Flask>=2.0.0              # REMOVED - using FastAPI
+# Werkzeug>=2.0.0          # REMOVED - WSGI utilities not needed
+# gunicorn>=20.0.0         # REMOVED - use uvicorn instead
