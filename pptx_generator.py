@@ -113,8 +113,8 @@ class PPTXGenerator:
             p1 = tf.paragraphs[0]
             kev = "[CISA KEV] " if item.get('cisa_kev') else ""
             raw_title = item.get('title', '')
-title = (raw_title[:77] + '...') if len(raw_title) > 80 else raw_title
-p1.text = f"{kev}{item.get('id')}: {title}"
+            title = (raw_title[:77] + '...') if len(raw_title) > 80 else raw_title
+            p1.text = f"{kev}{item.get('id')}: {title}"
             p1.font.size, p1.font.bold, p1.font.color.rgb = Pt(16), True, RGBColor(220, 53, 69)
             
             p2 = tf.add_paragraph()
@@ -129,13 +129,13 @@ p1.text = f"{kev}{item.get('id')}: {title}"
         # Simple timeline logic
         y = 1.8
         crit = data['execution_plan']['full_table_scans']['count']
-high = data['execution_plan']['index_scans']['count']
+        high = data['execution_plan']['index_scans']['count']
 
-for phase, detail in [
-    ("Phase 1", f"Address {crit} Critical Findings"),
-    ("Phase 2", f"Remediate {high} High-Risk Issues"),
-    ("Phase 3", "Ongoing Monitoring & Hardening")
-]:
+        for phase, detail in [
+            ("Phase 1", f"Address {crit} Critical Findings"),
+            ("Phase 2", f"Remediate {high} High-Risk Issues"),
+            ("Phase 3", "Ongoing Monitoring & Hardening")
+        ]:
             shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1), Inches(y), Inches(11), Inches(1.2))
             shape.fill.solid()
             shape.fill.fore_color.rgb = RGBColor(240, 240, 240)
