@@ -1,12 +1,54 @@
 services:
-  app:
-    build: .
+  # FastAPI application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: reportgc-api
+    ports:
+      - "8000:8000"  # FastAPI default port (not 5000)
+    volumes:
+      - ./templates:/app/templates:ro
+      - ./static:/app/static:ro
+      - reports_data:/app/reports
+    environment:
+      - REPORTGC_LOG_LEVEL=INFO
+      - REPORTGC_CLEANUP_DELAY=300
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Development with auto-reload
+  api-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: reportgc-api-dev
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-      - /app/exports  # Anonymous volume so exports don't clutter your host
+      - .:/app:cached  # Mount code for hot reload
     environment:
-      - PYTHONUNBUFFERED=1
+      - REPORTGC_LOG_LEVEL=DEBUG
+    profiles:
+      - dev
 
+  # Optional: Nginx as reverse proxy (production)
+  nginx:
+    image: nginx:alpine
+    container_name: reportgc-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-fastapi.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    profiles:
+      - prod
 
+volumes:
+  reports_data:
