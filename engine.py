@@ -5,10 +5,10 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 
 class RiskLevel(Enum):
-    CRITICAL = "FULL_TABLE_SCAN"  # Immediate attention required
-    HIGH = "INDEX_RANGE_SCAN"     # High priority optimization
-    MEDIUM = "NESTED_LOOP"        # Standard maintenance
-    LOW = "SEQUENTIAL_READ"       # Minor overhead
+    CRITICAL = "FULL_TABLE_SCAN"
+    HIGH = "INDEX_RANGE_SCAN"
+    MEDIUM = "NESTED_LOOP"
+    LOW = "SEQUENTIAL_READ"
 
 @dataclass
 class Finding:
@@ -24,7 +24,6 @@ class Finding:
 
     @property
     def risk_level(self) -> RiskLevel:
-        """Determine risk level based on CVSS score and CISA KEV status."""
         if self.cisa_kev or self.cvss_score >= 9.0:
             return RiskLevel.CRITICAL
         elif self.cvss_score >= 7.0:
@@ -35,52 +34,38 @@ class Finding:
 
     @property
     def fix_effort_hours(self) -> int:
-        """Estimated hours required to remediate this finding."""
         if self.fixed_version:
             return 2 if self.cvss_score >= 7.0 else 4
         return 16
 
     def to_dict(self) -> dict:
-        """Convert Finding to a dictionary for template rendering."""
         base_dict = asdict(self)
         base_dict['risk_level'] = self.risk_level.value
         base_dict['fix_effort_hours'] = self.fix_effort_hours
         return base_dict
 
 class SecurityExplainPlan:
-    """
-    Parses security scan output (Trivy JSON or SARIF) and generates 
-    an execution plan using database query optimization metaphors.
-    """
-
     def __init__(self, scan_data: dict):
         self.raw = scan_data
         self.timestamp = datetime.now()
         
-        # Format Detection logic
+        # Format Detection
         if "runs" in self.raw:
             self.findings = self._parse_sarif()
         else:
             self.findings = self._parse_trivy_native()
 
-    # --- SARIF PARSING LOGIC ---
-    
     def _parse_sarif(self) -> List[Finding]:
-        """Maps SARIF 2.1.0 (Trivy format) to Finding objects."""
         findings = []
         for run in self.raw.get("runs", []):
-            # Map rules by ID for quick metadata lookup
             rules_map = {
                 rule.get("id"): rule 
                 for rule in run.get("tool", {}).get("driver", {}).get("rules", [])
             }
-
             for res in run.get("results", []):
                 rule_id = res.get("ruleId")
                 rule_meta = rules_map.get(rule_id, {})
                 props = rule_meta.get("properties", {})
-                
-                # SARIF level mapping
                 level = res.get("level", "warning")
                 severity = props.get("severity", self._map_sarif_level(level))
 
@@ -100,8 +85,6 @@ class SecurityExplainPlan:
     def _map_sarif_level(self, level: str) -> str:
         mapping = {"error": "HIGH", "warning": "MEDIUM", "note": "LOW"}
         return mapping.get(level.lower(), "UNKNOWN")
-
-    # --- TRIVY NATIVE PARSING LOGIC ---
 
     def _parse_trivy_native(self) -> List[Finding]:
         findings = []
@@ -151,11 +134,8 @@ class SecurityExplainPlan:
             if source in cvss_data:
                 score = cvss_data[source].get("V3Score") or cvss_data[source].get("V2Score")
                 if score: return float(score)
-        
         fallback = {"CRITICAL": 9.0, "HIGH": 7.5, "MEDIUM": 5.0, "LOW": 2.5}
         return fallback.get(vuln.get("Severity", "UNKNOWN"), 5.0)
-
-    # --- OUTPUT GENERATION ---
 
     @property
     def grade(self) -> str:
@@ -165,21 +145,42 @@ class SecurityExplainPlan:
         if crit_count <= 5: return "C"
         return "F"
 
+    # --- NEW HELPER METHODS FOR report.html ---
+    
+    def _get_grade_color(self) -> str:
+        colors = {'A': '#28a745', 'B': '#6c757d', 'C': '#ffc107', 'D': '#fd7e14', 'F': '#dc3545'}
+        return colors.get(self.grade, '#000000')
+
+    def _get_grade_label(self) -> str:
+        labels = {'A': 'EXCELLENT', 'B': 'GOOD', 'C': 'FAIR', 'D': 'POOR', 'F': 'CRITICAL'}
+        return labels.get(self.grade, 'UNKNOWN')
+
     def to_dict(self) -> dict:
+        """
+        Final dict structure. 
+        Matches PPTXGenerator keys and report.html variables exactly.
+        """
         criticals = [f for f in self.findings if f.risk_level == RiskLevel.CRITICAL]
         highs = [f for f in self.findings if f.risk_level == RiskLevel.HIGH]
         mediums = [f for f in self.findings if f.risk_level == RiskLevel.MEDIUM]
         lows = [f for f in self.findings if f.risk_level == RiskLevel.LOW]
+        
+        total_hours = sum(f.fix_effort_hours for f in (criticals + highs))
 
         return {
             "grade": self.grade,
+            "grade_color": self._get_grade_color(),   # Needed for report.html
+            "grade_label": self._get_grade_label(),   # Needed for report.html
+            "total_effort_hours": total_hours,         # Needed for report.html
             "generated_at": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "report_id": self.timestamp.strftime("%Y%m%d-%H%M%S"),
             "summary": {
                 "total_findings": len(self.findings),
                 "critical": len(criticals),
                 "high": len(highs),
                 "medium": len(mediums),
                 "low": len(lows),
+                "cisa_kev_count": len([f for f in self.findings if f.cisa_kev])
             },
             "execution_plan": {
                 "full_table_scans": {
@@ -192,32 +193,10 @@ class SecurityExplainPlan:
                     "items": [f.to_dict() for f in highs],
                     "estimated_hours": sum(f.fix_effort_hours for f in highs)
                 },
-                "background_tasks": {
+                "low_priority": {
                     "count": len(mediums) + len(lows),
-                    "items": [f.to_dict() for f in (mediums + lows)]
+                    "items": [f.to_dict() for f in (mediums + lows)],
+                    "estimated_hours": 0 
                 }
             }
         }
-
-    def get_stats(self) -> dict:
-        return {
-            "grade": self.grade,
-            "total_findings": len(self.findings),
-            "critical": len([f for f in self.findings if f.risk_level == RiskLevel.CRITICAL]),
-            "total_effort_hours": sum(f.fix_effort_hours for f in self.findings 
-                                     if f.risk_level in [RiskLevel.CRITICAL, RiskLevel.HIGH])
-        }
-
-# Example logic for your website route
-if __name__ == "__main__":
-    # This simulates how you'd use it in your web app
-    try:
-        with open('your_scan_file.json') as f:
-            data = json.load(f)
-        
-        plan = SecurityExplainPlan(data)
-        print(f"Plan Generated! Grade: {plan.grade}")
-        print(f"Findings Found: {len(plan.findings)}")
-        
-    except Exception as e:
-        print(f"Error parsing file: {e}")
