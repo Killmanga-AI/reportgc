@@ -9,16 +9,9 @@ class ReportGenerator:
         self.static_dir = static_dir
         self.template_name = "report.html"
 
-    def _get_grade_style(self, grade: str) -> dict:
-        styles = {
-            'A': {'color': '#28a745', 'label': 'EXCELLENT'},
-            'B': {'color': '#6c757d', 'label': 'GOOD'},
-            'C': {'color': '#ffc107', 'label': 'FAIR'},
-            'D': {'color': '#fd7e14', 'label': 'POOR'},
-            'F': {'color': '#dc3545', 'label': 'CRITICAL'}
-        }
-        return styles.get(grade, {'color': '#333', 'label': 'UNKNOWN'})
-
+    def _get_grade_style(self) -> dict:
+    """Fallback only if engine data is missing."""
+    return {'color': '#333', 'label': 'UNKNOWN'}
     def _ensure_required_fields(self, data: dict) -> dict:
         """Sanitizes data to ensure template stability."""
         defaults = {
@@ -30,13 +23,13 @@ class ReportGenerator:
         
         # Merge defaults
         for key, val in defaults.items():
-            if key not in data:
-                data[key] = val
-
+    if key not in data or data[key] is None:
+        data[key] = val
         # Ensure execution plan structure
         for section in ['full_table_scans', 'index_scans', 'low_priority']:
-            if section not in data['execution_plan']:
-                data['execution_plan'][section] = {'count': 0, 'estimated_hours': 0, 'items': []}
+    sec = data['execution_plan'].get(section)
+    if not isinstance(sec, dict):
+        data['execution_plan'][section] = {'count': 0, 'estimated_hours': 0, 'items': []}
         
         return data
 
@@ -50,22 +43,15 @@ class ReportGenerator:
         logo_url = logo_path.absolute().as_uri() if logo_path.exists() else None
         
         # Styling and calculations
-        style = self._get_grade_style(data.get('grade', 'F'))
-        
+        fallback = self._get_grade_style()
         # Calculate effort hours locally if not provided by engine
-        if 'total_effort_hours' not in data:
-            ep = data['execution_plan']
-            data['total_effort_hours'] = (
-                ep['full_table_scans'].get('estimated_hours', 0) + 
-                ep['index_scans'].get('estimated_hours', 0)
-            )
+        data.setdefault('total_effort_hours', 0)
 
         data.update({
-            'logo_url': logo_url,
-            'grade_color': data.get('grade_color') or style['color'],
-            'grade_label': data.get('grade_label') or style['label']
-        })
-
+    'logo_url': logo_url,
+    'grade_color': data.get('grade_color', fallback['color']),
+    'grade_label': data.get('grade_label', fallback['label'])
+})
         html_out = template.render(data)
         
         # Base_url allows WeasyPrint to resolve relative CSS/Image links
