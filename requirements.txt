@@ -1,10 +1,98 @@
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-python-multipart==0.0.6
-jinja2==3.1.3
-weasyprint==60.2
-python-pptx==0.6.23
-httpx==0.26.0
-pytest==7.4.4
-requests==2.31.0
+# ReportGC - Security Reporting Pipeline
+# Requirements file for production and development
 
+# ============================================
+# CORE DEPENDENCIES (Required)
+# ============================================
+
+# Data handling and validation
+dataclasses>=0.6; python_version < "3.7"
+typing-extensions>=4.0.0; python_version < "3.10"
+
+# HTML/PDF Generation
+# WeasyPrint requires system libraries: libcairo2, libpango-1.0-0, libffi-dev
+WeasyPrint>=60.0,<62.0      # PDF generation from HTML/CSS
+Jinja2>=3.1.0,<4.0.0         # Template engine for report.html
+MarkupSafe>=2.1.0            # Jinja2 dependency for safe string handling
+
+# Presentation Generation
+python-pptx>=0.6.21,<1.0.0   # PowerPoint .pptx file creation
+Pillow>=9.0.0                # Image handling for PPTX (optional but recommended)
+lxml>=4.9.0                  # XML handling, required by python-pptx
+
+# File and Path handling
+pathlib>=1.0.1; python_version < "3.4"
+
+# ============================================
+# WEB FRAMEWORK SUPPORT (Optional)
+# ============================================
+
+# For Flask API integration
+Flask>=2.0.0,<3.0.0          # Web framework for REST API
+Werkzeug>=2.0.0,<3.0.0       # WSGI utilities
+
+# For FastAPI integration (alternative to Flask)
+# fastapi>=0.95.0,<1.0.0
+# uvicorn>=0.20.0,<1.0.0     # ASGI server for FastAPI
+
+# ============================================
+# ASYNC PROCESSING (Optional - for production scaling)
+# ============================================
+
+# Celery for background task processing
+# celery>=5.2.0,<6.0.0
+# redis>=4.5.0               # Celery broker/result backend
+
+# Alternative: RQ (Redis Queue) - simpler than Celery
+# rq>=1.13.0,<2.0.0
+
+# ============================================
+# MONITORING & LOGGING (Optional - production)
+# ============================================
+
+# Structured logging
+# structlog>=23.0.0,<24.0.0
+
+# Application monitoring
+# sentry-sdk>=1.20.0,<2.0.0  # Error tracking
+
+# ============================================
+# DEVELOPMENT & TESTING (Optional - dev only)
+# ============================================
+
+# Testing framework
+pytest>=7.0.0,<8.0.0          # Unit testing
+pytest-cov>=4.0.0,<5.0.0       # Coverage reporting
+pytest-xdist>=3.0.0,<4.0.0     # Parallel test execution
+
+# Code quality
+black>=23.0.0,<24.0.0          # Code formatting
+flake8>=6.0.0,<7.0.0           # Linting
+mypy>=1.0.0,<2.0.0             # Static type checking
+
+# Development utilities
+python-dotenv>=1.0.0,<2.0.0    # Environment variable management
+ipython>=8.0.0,<9.0.0          # Enhanced REPL for debugging
+
+# ============================================
+# DOCUMENTATION (Optional)
+# ============================================
+
+# Sphinx for documentation generation
+# Sphinx>=6.0.0,<7.0.0
+# sphinx-rtd-theme>=1.2.0      # ReadTheDocs theme
+
+# ============================================
+# SYSTEM REQUIREMENTS NOTES
+# ============================================
+
+# WeasyPrint System Dependencies (Ubuntu/Debian):
+#   sudo apt-get install -y libcairo2 libpango-1.0-0 libffi-dev libgdk-pixbuf2.0-0
+
+# WeasyPrint System Dependencies (macOS):
+#   brew install cairo pango gdk-pixbuf libffi
+
+# WeasyPrint System Dependencies (RHEL/CentOS/Fedora):
+#   sudo dnf install cairo pango gdk-pixbuf2 libffi
+
+# Python Version: 3.8+ (3.11 recommended for performance)
