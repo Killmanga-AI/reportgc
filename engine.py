@@ -11,6 +11,7 @@ from enum import Enum
 class RiskLevel(Enum):
     FULL_TABLE_SCAN = "FULL_TABLE_SCAN"
     INDEX_RANGE_SCAN = "INDEX_RANGE_SCAN"
+    NESTED_LOOP = "NESTED_LOOP"  # Restored MEDIUM tier
     SEQUENTIAL_READ = "SEQUENTIAL_READ"
 
 
@@ -40,6 +41,8 @@ class Finding:
             return RiskLevel.FULL_TABLE_SCAN
         if self.cvss_score >= 7.0:
             return RiskLevel.INDEX_RANGE_SCAN
+        if self.cvss_score >= 4.0:
+            return RiskLevel.NESTED_LOOP  # Restored MEDIUM tier
         return RiskLevel.SEQUENTIAL_READ
 
     @property
@@ -235,10 +238,24 @@ class SecurityExplainPlan:
             return "D"
         return "F"
 
+    def _classify_findings(self) -> Dict[RiskLevel, List[Finding]]:
+        """
+        Single-pass classification for performance.
+        Returns dict mapping RiskLevel to list of findings.
+        """
+        buckets = {level: [] for level in RiskLevel}
+        for f in self.findings:
+            buckets[f.risk_level].append(f)
+        return buckets
+
     def to_dict(self) -> Dict[str, Any]:
-        criticals = [f for f in self.findings if f.risk_level == RiskLevel.FULL_TABLE_SCAN]
-        highs = [f for f in self.findings if f.risk_level == RiskLevel.INDEX_RANGE_SCAN]
-        rest = [f for f in self.findings if f.risk_level == RiskLevel.SEQUENTIAL_READ]
+        # Single-pass classification (performance fix)
+        buckets = self._classify_findings()
+        
+        criticals = buckets[RiskLevel.FULL_TABLE_SCAN]
+        highs = buckets[RiskLevel.INDEX_RANGE_SCAN]
+        mediums = buckets[RiskLevel.NESTED_LOOP]
+        lows = buckets[RiskLevel.SEQUENTIAL_READ]
 
         return {
             "grade": self.grade,
@@ -248,8 +265,8 @@ class SecurityExplainPlan:
                 "total_findings": len(self.findings),
                 "critical": len(criticals),
                 "high": len(highs),
-                "medium": 0,
-                "low": len(rest),
+                "medium": len(mediums),  # Now accurate!
+                "low": len(lows),        # Now accurate!
                 "cisa_kev_count": sum(1 for f in self.findings if f.cisa_kev),
             },
             "execution_plan": {
@@ -263,10 +280,15 @@ class SecurityExplainPlan:
                     "estimated_hours": sum(f.fix_effort_hours for f in highs),
                     "items": [f.to_dict() for f in highs],
                 },
+                "nested_loops": {        # New bucket for MEDIUM
+                    "count": len(mediums),
+                    "estimated_hours": sum(f.fix_effort_hours for f in mediums),
+                    "items": [f.to_dict() for f in mediums],
+                },
                 "low_priority": {
-                    "count": len(rest),
+                    "count": len(lows),
                     "estimated_hours": 0,
-                    "items": [f.to_dict() for f in rest],
+                    "items": [f.to_dict() for f in lows],
                 },
             },
         }
