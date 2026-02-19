@@ -35,8 +35,10 @@ class Finding:
     @property
     def fix_effort_hours(self) -> int:
         if self.fixed_version:
-            return 2 if self.cvss_score >= 7.0 else 4
-        return 16
+    return 2 if self.cvss_score >= 9.0 else 4
+if self.pkg_name in ("openssl", "glibc", "kernel"):
+    return 24
+return 16
 
     def to_dict(self) -> dict:
         base_dict = asdict(self)
@@ -73,7 +75,11 @@ class SecurityExplainPlan:
                     id=rule_id or "N/A",
                     title=rule_meta.get("shortDescription", {}).get("text", "Security Issue"),
                     severity=severity.upper(),
-                    cvss_score=float(props.get("cvssV3_score", 5.0)),
+                    raw_score = props.get("cvssV3_score")
+try:
+    cvss = float(raw_score)
+except (TypeError, ValueError):
+    cvss = 5.0,
                     cisa_kev="cisa" in str(props).lower(),
                     fixed_version=props.get("fixedVersion"),
                     pkg_name=props.get("pkgName", "system"),
@@ -143,6 +149,7 @@ class SecurityExplainPlan:
         if crit_count == 0: return "A"
         if crit_count <= 2: return "B"
         if crit_count <= 5: return "C"
+        if crit_count <= 10: return "D"
         return "F"
 
     # --- NEW HELPER METHODS FOR report.html ---
