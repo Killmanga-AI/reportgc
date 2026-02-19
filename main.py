@@ -1,207 +1,218 @@
+"""
+ReportGC - Main Orchestrator
+Thin wrapper around engine.py for web framework integration (Flask/FastAPI)
+"""
+
 import json
+from pathlib import Path
+from typing import Dict, Any, Optional
 from datetime import datetime
-from typing import List, Optional
-from dataclasses import dataclass, asdict
-from enum import Enum
+import tempfile
+import shutil
+from contextlib import contextmanager
 
-class RiskLevel(Enum):
-    CRITICAL = "FULL_TABLE_SCAN"
-    HIGH = "INDEX_RANGE_SCAN"
-    MEDIUM = "NESTED_LOOP"
-    LOW = "SEQUENTIAL_READ"
+# Import canonical engine
+from engine import SecurityExplainPlan, Finding, RiskLevel
 
-@dataclass
-class Finding:
-    id: str
-    title: str
-    severity: str
-    cvss_score: float
-    cisa_kev: bool
-    fixed_version: Optional[str]
-    pkg_name: str
-    installed_version: str
-    description: str
+# Import generators
+from pptx_generator import PPTXGenerator
+from report_generator import ReportGenerator
 
-    @property
-    def risk_level(self) -> RiskLevel:
-        if self.cisa_kev or self.cvss_score >= 9.0:
-            return RiskLevel.CRITICAL
-        elif self.cvss_score >= 7.0:
-            return RiskLevel.HIGH
-        elif self.cvss_score >= 4.0:
-            return RiskLevel.MEDIUM
-        return RiskLevel.LOW
 
-    @property
-    def fix_effort_hours(self) -> int:
-        if self.fixed_version:
-            return 2 if self.cvss_score >= 9.0 else 4
-        if self.pkg_name in ("openssl", "glibc", "kernel"):
-            return 24
-        return 16
-
-    def to_dict(self) -> dict:
-        base_dict = asdict(self)
-        base_dict['risk_level'] = self.risk_level.value
-        base_dict['fix_effort_hours'] = self.fix_effort_hours
-        return base_dict
-
-class SecurityExplainPlan:
-    def __init__(self, scan_data: dict):
-        self.raw = scan_data
-        self.timestamp = datetime.now()
+class ReportGCPipeline:
+    """
+    High-level orchestrator for the ReportGC security reporting pipeline.
+    
+    Responsibilities:
+    - Input validation and sanitization
+    - Orchestrate Engine → Generators flow
+    - Temporary file management with automatic cleanup
+    - Error handling and logging hooks
+    """
+    
+    def __init__(
+        self,
+        template_dir: Path,
+        static_dir: Path,
+        output_dir: Optional[Path] = None
+    ):
+        self.template_dir = Path(template_dir)
+        self.static_dir = Path(static_dir)
+        self.output_dir = Path(output_dir) if output_dir else Path(tempfile.gettempdir())
         
-        # Format Detection
-        if "runs" in self.raw:
-            self.findings = self._parse_sarif()
-        else:
-            self.findings = self._parse_trivy_native()
-
-    def _parse_sarif(self) -> List[Finding]:
-        findings = []
-        for run in self.raw.get("runs", []):
-            rules_map = {
-                rule.get("id"): rule 
-                for rule in run.get("tool", {}).get("driver", {}).get("rules", [])
-            }
-            for res in run.get("results", []):
-                rule_id = res.get("ruleId")
-                rule_meta = rules_map.get(rule_id, {})
-                props = rule_meta.get("properties", {})
-                level = res.get("level", "warning")
-                severity = props.get("severity", self._map_sarif_level(level))
-
-                raw_score = props.get("cvssV3_score")
-                try:
-                    cvss = float(raw_score)
-                except (TypeError, ValueError):
-                    cvss = 5.0
-
-                findings.append(Finding(
-                    id=rule_id or "N/A",
-                    title=rule_meta.get("shortDescription", {}).get("text", "Security Issue"),
-                    severity=severity.upper(),
-                    cvss_score=cvss,
-                    cisa_kev="cisa" in str(props).lower(),
-                    fixed_version=props.get("fixedVersion"),
-                    pkg_name=props.get("pkgName", "system"),
-                    installed_version=props.get("installedVersion", "N/A"),
-                    description=res.get("message", {}).get("text", "No description available.")
-                ))
-        return findings
-
-    def _map_sarif_level(self, level: str) -> str:
-        mapping = {"error": "HIGH", "warning": "MEDIUM", "note": "LOW"}
-        return mapping.get(level.lower(), "MEDIUM")
-
-    def _parse_trivy_native(self) -> List[Finding]:
-        findings = []
-        for result in self.raw.get("Results", []):
-            for vuln in result.get("Vulnerabilities", []):
-                findings.append(self._map_vuln_to_finding(vuln))
-            for misconfig in result.get("Misconfigurations", []):
-                findings.append(self._map_misconfig_to_finding(misconfig))
-        return findings
-
-    def _map_vuln_to_finding(self, v: dict) -> Finding:
-        return Finding(
-            id=v.get("VulnerabilityID", "N/A"),
-            title=v.get("Title", "Untitled Vulnerability"),
-            severity=v.get("Severity", "UNKNOWN"),
-            cvss_score=self._extract_cvss(v),
-            cisa_kev=self._check_cisa_kev(v),
-            fixed_version=v.get("FixedVersion"),
-            pkg_name=v.get("PkgName", "system-lib"),
-            installed_version=v.get("InstalledVersion", "0.0.0"),
-            description=v.get("Description", "No description available.")
-        )
-
-    def _map_misconfig_to_finding(self, m: dict) -> Finding:
-        severity_map = {"CRITICAL": 9.5, "HIGH": 7.5, "MEDIUM": 5.0, "LOW": 2.5}
-        sev = m.get("Severity", "MEDIUM")
-        return Finding(
-            id=m.get("ID", "MISCONFIG"),
-            title=m.get("Title", "Configuration Issue"),
-            severity=sev,
-            cvss_score=severity_map.get(sev, 5.0),
-            cisa_kev=False,
-            fixed_version=None,
-            pkg_name=m.get("Type", "config"),
-            installed_version="N/A",
-            description=m.get("Description", "No description available.")
-        )
-
-    def _check_cisa_kev(self, vuln: dict) -> bool:
-        if vuln.get("CisaKnownExploited", False):
-            return True
-        refs = str(vuln.get("References", "")) + vuln.get("PrimaryURL", "")
-        return "cisa.gov" in refs.lower() and "known-exploited" in refs.lower()
-
-    def _extract_cvss(self, vuln: dict) -> float:
-        cvss_data = vuln.get("CVSS", {})
-        for source in ["nvd", "redhat", "ghsa", "vendor"]:
-            if source in cvss_data:
-                score = cvss_data[source].get("V3Score") or cvss_data[source].get("V2Score")
-                if score:
-                    return float(score)
-        fallback = {"CRITICAL": 9.0, "HIGH": 7.5, "MEDIUM": 5.0, "LOW": 2.5}
-        return fallback.get(vuln.get("Severity", "UNKNOWN"), 5.0)
-
-    @property
-    def grade(self) -> str:
-        crit_count = len([f for f in self.findings if f.risk_level == RiskLevel.CRITICAL])
-        if crit_count == 0: return "A"
-        if crit_count <= 2: return "B"
-        if crit_count <= 5: return "C"
-        if crit_count <= 10: return "D"
-        return "F"
-
-    def _get_grade_color(self) -> str:
-        colors = {'A': '#28a745', 'B': '#6c757d', 'C': '#ffc107', 'D': '#fd7e14', 'F': '#dc3545'}
-        return colors.get(self.grade, '#000000')
-
-    def _get_grade_label(self) -> str:
-        labels = {'A': 'EXCELLENT', 'B': 'GOOD', 'C': 'FAIR', 'D': 'POOR', 'F': 'CRITICAL'}
-        return labels.get(self.grade, 'UNKNOWN')
-
-    def to_dict(self) -> dict:
-        criticals = [f for f in self.findings if f.risk_level == RiskLevel.CRITICAL]
-        highs = [f for f in self.findings if f.risk_level == RiskLevel.HIGH]
-        mediums = [f for f in self.findings if f.risk_level == RiskLevel.MEDIUM]
-        lows = [f for f in self.findings if f.risk_level == RiskLevel.LOW]
+        # Initialize generators
+        self.report_gen = ReportGenerator(self.template_dir, self.static_dir)
+        self.pptx_gen = PPTXGenerator()  # Can pass master_pptx if needed
         
-        total_hours = sum(f.fix_effort_hours for f in (criticals + highs))
+        # Ensure output directory exists
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
+    def process_scan(
+        self,
+        scan_data: Dict[str, Any],
+        report_id: Optional[str] = None
+    ) -> Dict[str, Path]:
+        """
+        Process scanner output through full pipeline.
+        
+        Args:
+            scan_data: Raw Trivy or SARIF JSON output
+            report_id: Optional custom report ID (default: timestamp)
+            
+        Returns:
+            Dict with paths to generated files: {'pdf': Path, 'pptx': Path}
+            
+        Raises:
+            ValueError: If scan_data is invalid or empty
+            RuntimeError: If report generation fails
+        """
+        # Input validation
+        if not scan_data or not isinstance(scan_data, dict):
+            raise ValueError("Invalid scan_data: must be non-empty dict")
+        
+        # Step 1: Engine (Security Explain Plan)
+        try:
+            engine = SecurityExplainPlan(scan_data)
+            data = engine.to_dict()
+        except Exception as e:
+            raise RuntimeError(f"Engine processing failed: {e}") from e
+        
+        # Override report_id if provided (for consistency)
+        if report_id:
+            data['report_id'] = report_id
+            data['generated_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Step 2: Generate outputs
+        report_id = data['report_id']
+        pdf_path = self.output_dir / f"ReportGC-{report_id}.pdf"
+        pptx_path = self.output_dir / f"ReportGC-{report_id}.pptx"
+        
+        try:
+            # PDF Report
+            self.report_gen.generate_pdf(data, pdf_path)
+            
+            # PPTX Presentation
+            self.pptx_gen.generate_pptx(data, str(pptx_path))
+            
+        except Exception as e:
+            # Cleanup partial outputs on failure
+            for path in [pdf_path, pptx_path]:
+                if path.exists():
+                    path.unlink()
+            raise RuntimeError(f"Report generation failed: {e}") from e
+        
         return {
-            "grade": self.grade,
-            "grade_color": self._get_grade_color(),
-            "grade_label": self._get_grade_label(),
-            "total_effort_hours": total_hours,
-            "generated_at": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-            "report_id": self.timestamp.strftime("%Y%m%d-%H%M%S"),
-            "summary": {
-                "total_findings": len(self.findings),
-                "critical": len(criticals),
-                "high": len(highs),
-                "medium": len(mediums),
-                "low": len(lows),
-                "cisa_kev_count": len([f for f in self.findings if f.cisa_kev])
-            },
-            "execution_plan": {
-                "full_table_scans": {
-                    "count": len(criticals),
-                    "items": [f.to_dict() for f in criticals],
-                    "estimated_hours": sum(f.fix_effort_hours for f in criticals)
-                },
-                "index_scans": {
-                    "count": len(highs),
-                    "items": [f.to_dict() for f in highs],
-                    "estimated_hours": sum(f.fix_effort_hours for f in highs)
-                },
-                "low_priority": {
-                    "count": len(mediums) + len(lows),
-                    "items": [f.to_dict() for f in (mediums + lows)],
-                    "estimated_hours": 0
-                }
-            }
+            'pdf': pdf_path,
+            'pptx': pptx_path,
+            'report_id': report_id,
+            'data': data  # Raw data for debugging/API response
         }
+
+    @contextmanager
+    def temporary_report(self, scan_data: Dict[str, Any]):
+        """
+        Context manager for temporary report generation with automatic cleanup.
+        
+        Usage:
+            with pipeline.temporary_report(scan_data) as paths:
+                # Do something with paths['pdf'], paths['pptx']
+                pass
+            # Files automatically deleted here
+        """
+        paths = None
+        try:
+            paths = self.process_scan(scan_data)
+            yield paths
+        finally:
+            if paths:
+                for key in ['pdf', 'pptx']:
+                    path = paths.get(key)
+                    if path and Path(path).exists():
+                        Path(path).unlink(missing_ok=True)
+
+    def validate_scan_data(self, scan_data: Dict[str, Any]) -> bool:
+        """
+        Pre-flight validation of scanner output format.
+        """
+        if not isinstance(scan_data, dict):
+            return False
+        
+        # Check for Trivy format
+        if "Results" in scan_data:
+            return True
+        
+        # Check for SARIF format
+        if "runs" in scan_data:
+            return True
+        
+        return False
+
+
+# Convenience function for simple usage
+def generate_reports(
+    scan_json: str or Dict,
+    template_dir: str,
+    static_dir: str,
+    output_dir: Optional[str] = None
+) -> Dict[str, str]:
+    """
+    One-shot function to generate reports from scanner JSON.
+    
+    Args:
+        scan_json: JSON string or dict from Trivy/SARIF scanner
+        template_dir: Path to report.html templates
+        static_dir: Path to static assets (logo, css)
+        output_dir: Where to save files (default: temp dir)
+        
+    Returns:
+        Dict with file paths: {'pdf': str, 'pptx': str, 'report_id': str}
+    """
+    # Parse JSON if string provided
+    if isinstance(scan_json, str):
+        scan_data = json.loads(scan_json)
+    else:
+        scan_data = scan_json
+    
+    pipeline = ReportGCPipeline(
+        template_dir=Path(template_dir),
+        static_dir=Path(static_dir),
+        output_dir=Path(output_dir) if output_dir else None
+    )
+    
+    result = pipeline.process_scan(scan_data)
+    
+    return {
+        'pdf': str(result['pdf']),
+        'pptx': str(result['pptx']),
+        'report_id': result['report_id']
+    }
+
+
+# Flask/FastAPI integration example
+def create_api_endpoint(pipeline: ReportGCPipeline):
+    """
+    Example usage with Flask:
+    
+    from flask import Flask, request, send_file
+    app = Flask(__name__)
+    pipeline = ReportGCPipeline(...)
+    
+    @app.route('/api/report', methods=['POST'])
+    def generate_report():
+        scan_data = request.get_json()
+        if not pipeline.validate_scan_data(scan_data):
+            return {'error': 'Invalid scan format'}, 400
+        
+        try:
+            with pipeline.temporary_report(scan_data) as result:
+                # Return PDF immediately, then cleanup
+                return send_file(
+                    result['pdf'],
+                    mimetype='application/pdf',
+                    as_attachment=True,
+                    download_name=f"ReportGC-{result['report_id']}.pdf"
+                )
+        except Exception as e:
+            return {'error': str(e)}, 500
+    """
+    pass
