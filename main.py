@@ -52,8 +52,13 @@ def get_grade_color(grade: str) -> str:
 def validate_scan_json(data: dict) -> bool:
     if not isinstance(data, dict):
         return False
-    # Check for either Trivy native or SARIF structure
-    return "Results" in data or "runs" in data
+
+    if "Results" in data:
+        return isinstance(data["Results"], list)
+    if "runs" in data:
+        return isinstance(data["runs"], list)
+
+    return False
 
 def render_error_page(message: str, status_code: int = 500) -> str:
     """Generates a styled HTML error page"""
