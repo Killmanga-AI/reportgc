@@ -65,7 +65,7 @@ class TestDataStructureValidation:
         assert result["execution_plan"]["full_table_scans"]["count"] == 5
 
 
-classTestColorMapping:
+class TestColorMapping:
     """Test color assignment for grades and risk levels."""
     
     def test_grade_a_is_green(self):
