@@ -169,7 +169,7 @@ class TestTemporaryReport:
         assert not pdf_path.exists()
 
 
-classTestConvenienceFunction:
+class TestConvenienceFunction:
     """Test generate_reports() one-shot function."""
     
     def test_accepts_dict_input(self, tmp_path, temp_template_dir, temp_static_dir):
