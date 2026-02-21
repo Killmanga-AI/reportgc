@@ -7,7 +7,7 @@
 # Data handling
 dataclasses>=0.6; python_version < "3.7"
 typing-extensions>=4.0.0; python_version < "3.10"
-pydantic>=2.0.0,<3.0.0      # Data validation (FastAPI uses this)
+pydantic>=2.0.0,<3.0.0
 
 # HTML/PDF Generation
 WeasyPrint>=60.0,<62.0
@@ -23,37 +23,26 @@ lxml>=4.9.0
 # FASTAPI STACK (Web Framework)
 # ============================================
 
-fastapi>=0.100.0,<1.0.0     # Modern, fast web framework
-uvicorn[standard]>=0.23.0   # ASGI server with uvloop, httptools
-python-multipart>=0.0.6    # File upload support
-
-# Optional: Alternative ASGI servers
-# hypercorn>=0.14.0        # HTTP/2 support
-# daphne>=4.0.0            # Django Channels compatible
+fastapi>=0.100.0,<1.0.0
+uvicorn[standard]>=0.23.0
+python-multipart>=0.0.6
 
 # ============================================
-# ASYNC PROCESSING (Optional)
+# STATELESS PROTECTIONS (Rate Limiting)
 # ============================================
 
-# celery>=5.3.0,<6.0.0     # Distributed task queue
-# redis>=4.6.0              # Celery broker/result backend
-# flower>=2.0.0            # Celery monitoring (use mher/flower image instead)
+# Built-in middleware used (no extra deps)
+# For advanced: slowapi>=0.1.9
 
 # ============================================
 # DEVELOPMENT & TESTING
 # ============================================
 
 pytest>=7.0.0,<8.0.0
-pytest-asyncio>=0.21.0     # Async test support for FastAPI
+pytest-asyncio>=0.21.0
 pytest-cov>=4.0.0,<5.0.0
-httpx>=0.24.0              # TestClient for FastAPI
+httpx>=0.24.0
 black>=23.0.0,<24.0.0
 flake8>=6.0.0,<7.0.0
 mypy>=1.0.0,<2.0.0
-
-# ============================================
-# REMOVED (Flask-specific, not needed)
-# ============================================
-# Flask>=2.0.0              # REMOVED - using FastAPI
-# Werkzeug>=2.0.0          # REMOVED - WSGI utilities not needed
-# gunicorn>=20.0.0         # REMOVED - use uvicorn instead
+python-dotenv>=1.0.0
