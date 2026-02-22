@@ -1,48 +1,25 @@
-# ReportGC - FastAPI Edition Requirements
+# Core dependencies
+pydantic>=2.10.0,<3.0.0
+python-multipart>=0.0.20
 
-# ============================================
-# CORE DEPENDENCIES (Required)
-# ============================================
+# PDF/HTML generation
+WeasyPrint>=65.1,<66.0
+Jinja2>=3.1.5,<4.0.0
 
-# Data handling
-dataclasses>=0.6; python_version < "3.7"
-typing-extensions>=4.0.0; python_version < "3.10"
-pydantic>=2.0.0,<3.0.0
+# Presentation generation
+python-pptx>=1.0.2,<2.0.0
+Pillow>=12.1.1,<13.0.0
+lxml>=5.3.0
 
-# HTML/PDF Generation
-WeasyPrint>=60.0,<62.0
-Jinja2>=3.1.0,<4.0.0
-MarkupSafe>=2.1.0
+# Web framework
+fastapi>=0.129.0,<1.0.0
+uvicorn[standard]>=0.34.0
+starlette>=0.41.0
 
-# Presentation Generation
-python-pptx>=0.6.21,<1.0.0
-Pillow>=9.0.0
-lxml>=4.9.0
+# Development only
+pytest>=8.3.0,<9.0.0
+black>=25.1.0,<26.0.0
+flake8>=7.1.0,<8.0.0
+mypy>=1.15.0,<2.0.0
+python-dotenv>=1.0.1
 
-# ============================================
-# FASTAPI STACK (Web Framework)
-# ============================================
-
-fastapi>=0.100.0,<1.0.0
-uvicorn[standard]>=0.23.0
-python-multipart>=0.0.6
-
-# ============================================
-# STATELESS PROTECTIONS (Rate Limiting)
-# ============================================
-
-# Built-in middleware used (no extra deps)
-# For advanced: slowapi>=0.1.9
-
-# ============================================
-# DEVELOPMENT & TESTING
-# ============================================
-
-pytest>=7.0.0,<8.0.0
-pytest-asyncio>=0.21.0
-pytest-cov>=4.0.0,<5.0.0
-httpx>=0.24.0
-black>=23.0.0,<24.0.0
-flake8>=6.0.0,<7.0.0
-mypy>=1.0.0,<2.0.0
-python-dotenv>=1.0.0
