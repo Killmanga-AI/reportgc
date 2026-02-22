@@ -1,35 +1,39 @@
 # ReportGC - FastAPI Edition
+# Security-patched: 2026-02-22
 # Optimized for ASGI performance
 
 # ==========================================
 # Stage 1: Builder
 # ==========================================
-FROM python:3.11-slim as builder
+FROM python:3.12-slim as builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Security: Update system packages during build
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     build-essential \
     libcairo2-dev \
     libpango1.0-dev \
     libgdk-pixbuf2.0-dev \
     libffi-dev \
     shared-mime-info \
+    # 2026 security updates
+    libexpat1-dev \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
 # ==========================================
 # Stage 2: Production (FastAPI + Uvicorn)
 # ==========================================
-FROM python:3.11-slim as production
+FROM python:3.12-slim as production
 
-RUN groupadd -r reportgc && useradd -r -g reportgc reportgc
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Security: Update all system packages
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
     libgdk-pixbuf2.0-0 \
@@ -37,8 +41,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     shared-mime-info \
     fonts-liberation \
     fonts-dejavu \
+    # 2026 security patches
+    libexpat1 \
+    openssl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && fc-cache -fv
+
+RUN groupadd -r reportgc && useradd -r -g reportgc reportgc
 
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -56,10 +66,13 @@ USER reportgc
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=random \
     REPORTGC_TEMPLATE_DIR=/app/templates \
     REPORTGC_STATIC_DIR=/app/static \
     REPORTGC_OUTPUT_DIR=/app/reports \
-    REPORTGC_LOG_LEVEL=INFO
+    REPORTGC_LOG_LEVEL=INFO \
+    # 2026: Disable Python bytecode for security
+    PYTHONDONTWRITEBYTECODE=1
 
 # FastAPI health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
