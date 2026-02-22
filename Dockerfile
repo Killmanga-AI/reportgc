@@ -54,7 +54,7 @@ WORKDIR /app
 RUN mkdir -p /app/templates /app/static /app/reports
 
 COPY engine.py pptx_generator.py report_generator.py main.py api.py ./
-COPY report.html /app/templates/report.html
+COPY template/report.html /app/templates/report.html
 
 RUN chown -R reportgc:reportgc /app
 
