@@ -5,6 +5,8 @@ python-multipart>=0.0.20
 # PDF/HTML generation
 WeasyPrint>=65.1,<66.0
 Jinja2>=3.1.5,<4.0.0
+ijson>=3.2.0
+
 
 # Presentation generation
 python-pptx>=1.0.2,<2.0.0
