@@ -10,7 +10,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     build-essential \
     libcairo2-dev \
     libpango1.0-dev \
-    libgdk-pixbuf2.0-dev \
+    libgdk-pixbuf-xlib-2.0-dev \
     libffi-dev \
     shared-mime-info \
     libexpat1-dev \
@@ -32,7 +32,7 @@ FROM python:3.12-slim as production
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
-    libgdk-pixbuf2.0-0 \
+    libgdk-pixbuf-xlib-2.0-0 \
     libffi8 \
     shared-mime-info \
     fonts-liberation \
