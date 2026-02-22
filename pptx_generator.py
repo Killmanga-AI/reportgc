@@ -1,22 +1,46 @@
+"""
+ReportGC - PPTX Generator
+Generates executive security presentations with modern Python practices.
+"""
+
+import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+
 from pptx import Presentation
-from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pathlib import Path
-from datetime import datetime
+from pptx.enum.text import PP_ALIGN
+from pptx.util import Inches, Pt
+
+logger = logging.getLogger(__name__)
+
 
 class PPTXGenerator:
-    def __init__(self, master_pptx: Path = None):
+    """
+    Generates professional PowerPoint presentations from security scan data.
+    
+    Supports 4-tier risk classification:
+    - FULL_TABLE_SCAN (Critical)
+    - INDEX_RANGE_SCAN (High)  
+    - NESTED_LOOP (Medium)
+    - SEQUENTIAL_READ (Low)
+    """
+    
+    def __init__(self, master_pptx: Optional[Path] = None):
         self.prs = Presentation(str(master_pptx)) if master_pptx and master_pptx.exists() else Presentation()
         self.prs.slide_width = Inches(13.333)
         self.prs.slide_height = Inches(7.5)
 
     def _get_color(self, grade: str) -> RGBColor:
+        """Get color for grade letter."""
         colors = {
-            'A': RGBColor(40, 167, 69), 'B': RGBColor(108, 117, 125),
-            'C': RGBColor(255, 193, 7), 'D': RGBColor(253, 126, 20),
-            'F': RGBColor(220, 53, 69)
+            'A': RGBColor(40, 167, 69),   # Green
+            'B': RGBColor(108, 117, 125), # Gray
+            'C': RGBColor(255, 193, 7),   # Yellow
+            'D': RGBColor(253, 126, 20),  # Orange
+            'F': RGBColor(220, 53, 69)    # Red
         }
         return colors.get(grade, RGBColor(0, 0, 0))
 
@@ -30,7 +54,7 @@ class PPTXGenerator:
         }
         return colors.get(risk_level, RGBColor(108, 117, 125))
 
-    def _ensure_data_structure(self, data: dict) -> dict:
+    def _ensure_data_structure(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Sanitizes input data for slide stability."""
         data.setdefault('grade', 'F')
         data.setdefault('generated_at', datetime.now().strftime('%Y-%m-%d %H:%M'))
@@ -38,28 +62,45 @@ class PPTXGenerator:
         
         ep = data.setdefault('execution_plan', {})
         
-        # Support both 3-tier (legacy) and 4-tier (new) engine outputs
+        # Support 4-tier system
         for section in ['full_table_scans', 'index_scans', 'nested_loops', 'low_priority']:
             ep.setdefault(section, {'count': 0, 'estimated_hours': 0, 'items': []})
         
-        # Backward compatibility: if no nested_loops but engine has medium count
-        if ep['nested_loops']['count'] == 0 and data.get('summary', {}).get('medium', 0) > 0:
-            # Medium findings were lumped into low_priority, split them visually
-            pass  # Keep as-is, will show in matrix
-        
         return data
 
-    def generate_pptx(self, data: dict, output_path: str):
-        data = self._ensure_data_structure(data)
-        self._add_title_slide(data)
-        self._add_matrix_slide(data)
-        self._add_critical_detail_slide(data)
-        self._add_high_detail_slide(data)  # New: High severity details
-        self._add_roadmap_slide(data)
-        self.prs.save(output_path)
-        print(f"PPTX generated: {output_path}")
+    def generate_pptx(self, data: Dict[str, Any], output_path: str) -> Path:
+        """
+        Generate PowerPoint presentation from scan data.
+        
+        Args:
+            data: Processed scan data from SecurityExplainPlan
+            output_path: Where to save the PPTX file
+            
+        Returns:
+            Path to generated file
+            
+        Raises:
+            RuntimeError: If generation fails
+        """
+        try:
+            data = self._ensure_data_structure(data)
+            self._add_title_slide(data)
+            self._add_matrix_slide(data)
+            self._add_critical_detail_slide(data)
+            self._add_high_detail_slide(data)
+            self._add_roadmap_slide(data)
+            
+            output_path = Path(output_path)
+            self.prs.save(str(output_path))
+            logger.info(f"PPTX generated: {output_path}")
+            return output_path
+            
+        except Exception as e:
+            logger.error(f"PPTX generation failed: {e}")
+            raise RuntimeError(f"Failed to generate PPTX: {e}") from e
 
-    def _add_title_slide(self, data):
+    def _add_title_slide(self, data: Dict[str, Any]) -> None:
+        """Add title slide with grade and metadata."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         color = self._get_color(data['grade'])
 
@@ -67,22 +108,33 @@ class PPTXGenerator:
         title = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(12), Inches(1.5))
         p = title.text_frame.paragraphs[0]
         p.text = "Security Posture: Executive Brief"
-        p.font.size, p.font.bold, p.alignment = Pt(44), True, PP_ALIGN.CENTER
+        p.font.size = Pt(44)
+        p.font.bold = True
+        p.alignment = PP_ALIGN.CENTER
 
         # Grade Letter
         grade_box = slide.shapes.add_textbox(Inches(4), Inches(2.5), Inches(5), Inches(2.5))
         p = grade_box.text_frame.paragraphs[0]
         p.text = data['grade']
-        p.font.size, p.font.bold, p.font.color.rgb, p.alignment = Pt(180), True, color, PP_ALIGN.CENTER
+        p.font.size = Pt(180)
+        p.font.bold = True
+        p.font.color.rgb = color
+        p.alignment = PP_ALIGN.CENTER
 
         # Metadata
         footer = slide.shapes.add_textbox(Inches(0.5), Inches(6.5), Inches(12), Inches(0.8))
         p = footer.text_frame.paragraphs[0]
         total_hours = data.get('total_effort_hours', 0)
-        p.text = f"Report ID: {data.get('report_id', 'INTERNAL')} | Findings: {data['summary']['total_findings']} | Est. Effort: {total_hours}h"
-        p.font.size, p.alignment = Pt(14), PP_ALIGN.CENTER
+        p.text = (
+            f"Report ID: {data.get('report_id', 'INTERNAL')} | "
+            f"Findings: {data['summary']['total_findings']} | "
+            f"Est. Effort: {total_hours}h"
+        )
+        p.font.size = Pt(14)
+        p.alignment = PP_ALIGN.CENTER
 
-    def _add_matrix_slide(self, data):
+    def _add_matrix_slide(self, data: Dict[str, Any]) -> None:
+        """Add resource allocation matrix slide."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         plan = data['execution_plan']
         
@@ -97,16 +149,22 @@ class PPTXGenerator:
             ("SEQUENTIAL READ", plan['low_priority'], RGBColor(108, 117, 125), "BACKLOG", "Low Severity")
         ]
 
-        # Adjust spacing for 4 rows instead of 3
         row_height = 1.3
         start_y = 1.5
         
         for i, (label, section, color, priority, subtitle) in enumerate(rows):
             y = start_y + (i * row_height)
-            shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.7), Inches(y), Inches(11.9), Inches(1.2))
+            shape = slide.shapes.add_shape(
+                MSO_SHAPE.ROUNDED_RECTANGLE, 
+                Inches(0.7), 
+                Inches(y), 
+                Inches(11.9), 
+                Inches(1.2)
+            )
             shape.fill.solid()
             shape.fill.fore_color.rgb = RGBColor(250, 250, 250)
-            shape.line.color.rgb, shape.line.width = color, Pt(2)
+            shape.line.color.rgb = color
+            shape.line.width = Pt(2)
             
             tf = shape.text_frame
             tf.word_wrap = True
@@ -114,7 +172,9 @@ class PPTXGenerator:
             # Title line
             p1 = tf.paragraphs[0]
             p1.text = f"{label} ({priority})"
-            p1.font.size, p1.font.bold, p1.font.color.rgb = Pt(16), True, color
+            p1.font.size = Pt(16)
+            p1.font.bold = True
+            p1.font.color.rgb = color
             
             # Subtitle line
             p2 = tf.add_paragraph()
@@ -122,7 +182,8 @@ class PPTXGenerator:
             p2.font.size = Pt(12)
             p2.font.color.rgb = RGBColor(100, 100, 100)
 
-    def _add_critical_detail_slide(self, data):
+    def _add_critical_detail_slide(self, data: Dict[str, Any]) -> None:
+        """Add slide with critical findings details."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         items = data['execution_plan']['full_table_scans']['items']
         
@@ -137,7 +198,13 @@ class PPTXGenerator:
 
         y = 1.6
         for item in items[:3]:  # Top 3 critical
-            box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.7), Inches(y), Inches(11.9), Inches(1.4))
+            box = slide.shapes.add_shape(
+                MSO_SHAPE.ROUNDED_RECTANGLE, 
+                Inches(0.7), 
+                Inches(y), 
+                Inches(11.9), 
+                Inches(1.4)
+            )
             box.fill.solid()
             box.fill.fore_color.rgb = RGBColor(255, 245, 245)
             
@@ -149,17 +216,23 @@ class PPTXGenerator:
             raw_title = item.get('title', '')
             display_title = (raw_title[:60] + '...') if len(raw_title) > 63 else raw_title
             p1.text = f"{kev}{item.get('id')}: {display_title}"
-            p1.font.size, p1.font.bold, p1.font.color.rgb = Pt(14), True, RGBColor(220, 53, 69)
+            p1.font.size = Pt(14)
+            p1.font.bold = True
+            p1.font.color.rgb = RGBColor(220, 53, 69)
             
             p2 = tf.add_paragraph()
             fix = item.get('fixed_version') or 'Contact Vendor'
-            p2.text = f"Package: {item.get('pkg_name')} | Fix: {fix} | Effort: {item.get('fix_effort_hours', '?')}h"
+            p2.text = (
+                f"Package: {item.get('pkg_name')} | "
+                f"Fix: {fix} | "
+                f"Effort: {item.get('fix_effort_hours', '?')}h"
+            )
             p2.font.size = Pt(11)
             
             y += 1.6
 
-    def _add_high_detail_slide(self, data):
-        """New slide for high severity findings."""
+    def _add_high_detail_slide(self, data: Dict[str, Any]) -> None:
+        """Add slide with high severity findings details."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
         items = data['execution_plan']['index_scans']['items']
         
@@ -174,7 +247,13 @@ class PPTXGenerator:
 
         y = 1.6
         for item in items[:3]:  # Top 3 high
-            box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.7), Inches(y), Inches(11.9), Inches(1.4))
+            box = slide.shapes.add_shape(
+                MSO_SHAPE.ROUNDED_RECTANGLE, 
+                Inches(0.7), 
+                Inches(y), 
+                Inches(11.9), 
+                Inches(1.4)
+            )
             box.fill.solid()
             box.fill.fore_color.rgb = RGBColor(255, 252, 245)
             
@@ -185,18 +264,27 @@ class PPTXGenerator:
             raw_title = item.get('title', '')
             display_title = (raw_title[:60] + '...') if len(raw_title) > 63 else raw_title
             p1.text = f"{item.get('id')}: {display_title}"
-            p1.font.size, p1.font.bold, p1.font.color.rgb = Pt(14), True, RGBColor(253, 126, 20)
+            p1.font.size = Pt(14)
+            p1.font.bold = True
+            p1.font.color.rgb = RGBColor(253, 126, 20)
             
             p2 = tf.add_paragraph()
             fix = item.get('fixed_version') or 'TBD'
-            p2.text = f"Package: {item.get('pkg_name')} | Fix: {fix} | Effort: {item.get('fix_effort_hours', '?')}h"
+            p2.text = (
+                f"Package: {item.get('pkg_name')} | "
+                f"Fix: {fix} | "
+                f"Effort: {item.get('fix_effort_hours', '?')}h"
+            )
             p2.font.size = Pt(11)
             
             y += 1.6
 
-    def _add_roadmap_slide(self, data):
+    def _add_roadmap_slide(self, data: Dict[str, Any]) -> None:
+        """Add remediation roadmap slide."""
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[6])
-        slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1)).text_frame.text = "Remediation Roadmap"
+        
+        title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(1))
+        title.text_frame.text = "Remediation Roadmap"
         
         plan = data['execution_plan']
         crit = plan['full_table_scans']['count']
@@ -213,7 +301,13 @@ class PPTXGenerator:
 
         y = 1.5
         for label, detail, color in phases:
-            shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1), Inches(y), Inches(11), Inches(1.0))
+            shape = slide.shapes.add_shape(
+                MSO_SHAPE.RECTANGLE, 
+                Inches(1), 
+                Inches(y), 
+                Inches(11), 
+                Inches(1.0)
+            )
             shape.fill.solid()
             shape.fill.fore_color.rgb = RGBColor(250, 250, 250)
             shape.line.color.rgb = color
@@ -224,7 +318,9 @@ class PPTXGenerator:
             
             p1 = tf.paragraphs[0]
             p1.text = label
-            p1.font.size, p1.font.bold, p1.font.color.rgb = Pt(14), True, color
+            p1.font.size = Pt(14)
+            p1.font.bold = True
+            p1.font.color.rgb = color
             
             p2 = tf.add_paragraph()
             p2.text = detail
