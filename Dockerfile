@@ -4,13 +4,13 @@
 # ==========================================
 # Stage 1: Builder
 # ==========================================
-FROM python:3.12-slim as builder
+FROM python:3.12-slim AS builder
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     build-essential \
     libcairo2-dev \
     libpango1.0-dev \
-    libgdk-pixbuf-xlib-2.0-dev \
+    libgdk-pixbuf-xlib-2.0-dev \  # FIXED: was libgdk-pixbuf2.0-dev
     libffi-dev \
     shared-mime-info \
     libexpat1-dev \
@@ -27,12 +27,12 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
 # ==========================================
 # Stage 2: Production
 # ==========================================
-FROM python:3.12-slim as production
+FROM python:3.12-slim AS production
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
-    libgdk-pixbuf-xlib-2.0-0 \
+    libgdk-pixbuf-xlib-2.0-0 \  # FIXED: was libgdk-pixbuf2.0-0
     libffi8 \
     shared-mime-info \
     fonts-liberation \
@@ -50,7 +50,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# FIXED: Create directories and copy files correctly
 RUN mkdir -p /app/templates /app/static /app/reports
 
 COPY engine.py pptx_generator.py report_generator.py main.py api.py ./
@@ -75,7 +74,7 @@ CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "
 # ==========================================
 # Stage 3: Development
 # ==========================================
-FROM production as development
+FROM production AS development
 
 USER root
 RUN pip install --no-cache-dir pytest pytest-asyncio httpx black flake8 mypy
