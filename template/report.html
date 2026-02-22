@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Execution Tool - ReportGC</title>
+    <title>Security Execution Plan - ReportGC</title>
     <style>
         @page {
             size: A4;
@@ -178,6 +178,11 @@
         }
         
         .row-medium {
+            background-color: #fffdf5;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .row-low {
             background-color: #f8f9fa;
             border-left: 4px solid #6c757d;
         }
@@ -208,6 +213,7 @@
         .badge-medium {
             background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+            color: #212529;
         }
         
         .badge-low {
@@ -356,294 +362,6 @@
                 box-shadow: none;
             }
         }
-        
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            body {
-                font-size: 10pt;
-            }
-            
-            .header-content h1 {
-                font-size: 24pt;
-            }
-            
-            .grade-letter {
-                font-size: 72pt;
-            }
-            
-            .grade-label {
-                font-size: 18pt;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            th {
-                font-size: 9pt;
-                padding: 12px 8px;
-            }
-            
-            td {
-                font-size: 9pt;
-                padding: 12px 8px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            body {
-                font-size: 10pt;
-                padding: 10px;
-            }
-            
-            .header {
-                flex-direction: column;
-                text-align: center;
-                padding-bottom: 15px;
-                margin-bottom: 30px;
-            }
-            
-            .header-content {
-                width: 100%;
-            }
-            
-            .header-content h1 {
-                font-size: 20pt;
-                margin-bottom: 6px;
-            }
-            
-            .header-content .subtitle {
-                font-size: 10pt;
-            }
-            
-            .meta {
-                text-align: center;
-                margin-top: 15px;
-                width: 100%;
-            }
-            
-            .grade-section {
-                padding: 30px 20px;
-                margin-bottom: 30px;
-            }
-            
-            .grade-letter {
-                font-size: 60pt;
-            }
-            
-            .grade-label {
-                font-size: 16pt;
-                letter-spacing: 2px;
-            }
-            
-            .grade-description {
-                font-size: 10pt;
-            }
-            
-            h2 {
-                font-size: 16pt;
-                margin: 30px 0 15px 0;
-            }
-            
-            h3 {
-                font-size: 13pt;
-                margin: 20px 0 12px 0;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                margin: 20px 0;
-            }
-            
-            .stat-card {
-                padding: 15px;
-            }
-            
-            .stat-number {
-                font-size: 28pt;
-            }
-            
-            .stat-label {
-                font-size: 9pt;
-            }
-            
-            /* Mobile-friendly table */
-            .table-container {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                margin: 20px -10px;
-            }
-            
-            table {
-                min-width: 600px;
-            }
-            
-            th {
-                font-size: 8pt;
-                padding: 10px 6px;
-                white-space: nowrap;
-            }
-            
-            td {
-                font-size: 9pt;
-                padding: 10px 6px;
-            }
-            
-            td strong {
-                font-size: 10pt;
-            }
-            
-            /* Stack badges vertically on mobile */
-            .finding-title {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .finding-title > div {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
-            
-            .finding-block {
-                padding: 15px;
-                margin-bottom: 20px;
-            }
-            
-            .finding-title {
-                font-size: 11pt;
-            }
-            
-            .finding-meta {
-                font-size: 8pt;
-                padding: 8px;
-            }
-            
-            .finding-meta-item {
-                display: block;
-                margin-right: 0;
-                margin-bottom: 6px;
-            }
-            
-            .finding-desc {
-                font-size: 9pt;
-            }
-            
-            .badge {
-                padding: 3px 8px;
-                font-size: 7pt;
-            }
-            
-            .empty-state {
-                padding: 30px 15px;
-            }
-            
-            .empty-state-icon {
-                font-size: 36pt;
-            }
-            
-            .empty-state-text {
-                font-size: 10pt;
-            }
-            
-            /* Alert boxes on mobile */
-            p[style*="background"] {
-                padding: 12px !important;
-                font-size: 9pt !important;
-            }
-            
-            /* Recommendations section */
-            div[style*="background: #f8f9fa"] {
-                padding: 15px !important;
-            }
-            
-            div[style*="background: #f8f9fa"] ul {
-                margin-left: 15px;
-                font-size: 9pt;
-            }
-            
-            .footer {
-                margin-top: 40px;
-                padding-top: 15px;
-                font-size: 8pt;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            body {
-                padding: 5px;
-            }
-            
-            .header-content h1 {
-                font-size: 18pt;
-            }
-            
-            .header-content .subtitle {
-                font-size: 9pt;
-            }
-            
-            .grade-section {
-                padding: 25px 15px;
-            }
-            
-            .grade-letter {
-                font-size: 48pt;
-            }
-            
-            .grade-label {
-                font-size: 14pt;
-                letter-spacing: 1px;
-            }
-            
-            h2 {
-                font-size: 14pt;
-            }
-            
-            .stat-number {
-                font-size: 24pt;
-            }
-            
-            .finding-id {
-                display: block;
-                margin-bottom: 5px;
-            }
-        }
-        
-        /* Ensure everything stays aligned */
-        * {
-            box-sizing: border-box;
-        }
-        
-        /* Prevent horizontal scroll */
-        body {
-            overflow-x: hidden;
-            max-width: 100vw;
-        }
-        
-        /* Ensure images don't break layout */
-        img {
-            max-width: 100%;
-            height: auto;
-        }
-        
-        /* Long words shouldn't break layout */
-        .finding-title,
-        .finding-desc,
-        .finding-meta {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            word-break: break-word;
-        }
-        
-        /* Ensure code-like text wraps */
-        .finding-id,
-        code,
-        pre {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
     </style>
 </head>
 <body>
@@ -679,8 +397,12 @@
             <div class="stat-label">High Severity</div>
         </div>
         <div class="stat-card">
+            <div class="stat-number" style="color: #ffc107;">{{ execution_plan.nested_loops.count }}</div>
+            <div class="stat-label">Medium Severity</div>
+        </div>
+        <div class="stat-card">
             <div class="stat-number" style="color: #6c757d;">{{ execution_plan.low_priority.count }}</div>
-            <div class="stat-label">Medium/Low</div>
+            <div class="stat-label">Low Severity</div>
         </div>
         <div class="stat-card">
             <div class="stat-number" style="color: #2c3e50;">{{ total_effort_hours }}</div>
@@ -696,11 +418,11 @@
         <table>
             <thead>
                 <tr>
-                    <th width="25%">Operation Type</th>
-                    <th width="12%">Count</th>
+                    <th width="22%">Operation Type</th>
+                    <th width="10%">Count</th>
                     <th width="28%">Action Plan</th>
                     <th width="20%">Estimated Load</th>
-                    <th width="15%">Timeline</th>
+                    <th width="20%">Timeline</th>
                 </tr>
             </thead>
             <tbody>
@@ -715,7 +437,7 @@
                         <span style="font-size:9pt;">Immediate patch required. Active exploitation likely.</span>
                     </td>
                     <td><strong>{{ execution_plan.full_table_scans.estimated_hours }} Hours</strong></td>
-                    <td><span class="badge badge-critical">Urgent</span></td>
+                    <td><span class="badge badge-critical">URGENT</span></td>
                 </tr>
                 <tr class="row-high">
                     <td>
@@ -728,12 +450,25 @@
                         <span style="font-size:9pt;">Schedule ticket. Patch within 30 days.</span>
                     </td>
                     <td><strong>{{ execution_plan.index_scans.estimated_hours }} Hours</strong></td>
-                    <td><span class="badge badge-high">High</span></td>
+                    <td><span class="badge badge-high">HIGH</span></td>
                 </tr>
                 <tr class="row-medium">
                     <td>
+                        <strong>NESTED LOOP</strong><br>
+                        <span style="font-size:9pt; color:#ffc107">Medium Severity</span>
+                    </td>
+                    <td style="font-weight:bold; font-size:16pt; color:#ffc107;">{{ execution_plan.nested_loops.count }}</td>
+                    <td>
+                        <strong>SPRINT +1</strong><br>
+                        <span style="font-size:9pt;">Plan for next maintenance window.</span>
+                    </td>
+                    <td><strong>{{ execution_plan.nested_loops.estimated_hours }} Hours</strong></td>
+                    <td><span class="badge badge-medium">MEDIUM</span></td>
+                </tr>
+                <tr class="row-low">
+                    <td>
                         <strong>SEQUENTIAL READ</strong><br>
-                        <span style="font-size:9pt; color:#6c757d">Medium / Low Severity</span>
+                        <span style="font-size:9pt; color:#6c757d">Low Severity</span>
                     </td>
                     <td style="font-size:14pt; color:#6c757d;">{{ execution_plan.low_priority.count }}</td>
                     <td>
@@ -741,7 +476,7 @@
                         <span style="font-size:9pt;">Review quarterly or accept as residual risk.</span>
                     </td>
                     <td>Background Task</td>
-                    <td><span class="badge badge-low">Low</span></td>
+                    <td><span class="badge badge-low">LOW</span></td>
                 </tr>
             </tbody>
         </table>
@@ -778,7 +513,7 @@
                     <div class="finding-meta-item"><strong>Fix Available:</strong> {{ finding.fixed_version or "No Patch Available" }}</div>
                 </div>
                 <div class="finding-desc">
-                    {{ finding.description|truncate(300) }}
+                    {{ finding.description[:300] }}{% if finding.description|length > 300 %}...{% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -813,7 +548,77 @@
                     <div class="finding-meta-item"><strong>Fix Available:</strong> {{ finding.fixed_version or "No Patch Available" }}</div>
                 </div>
                 <div class="finding-desc">
-                    {{ finding.description|truncate(300) }}
+                    {{ finding.description[:300] }}{% if finding.description|length > 300 %}...{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Medium Severity Findings Section -->
+    <div class="findings-section">
+        <h2>Medium Severity Findings (Planned Maintenance)</h2>
+        {% if execution_plan.nested_loops.count == 0 %}
+            <div class="empty-state">
+                <div class="empty-state-icon">✓</div>
+                <p class="empty-state-text">No medium severity findings detected.</p>
+            </div>
+        {% else %}
+            <p style="color: #856404; font-weight: 600; background: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107;">
+                <strong>{{ execution_plan.nested_loops.count }}</strong> medium severity vulnerabilities should be addressed in upcoming maintenance windows.
+            </p>
+            
+            {% for finding in execution_plan.nested_loops.items %}
+            <div class="finding-block">
+                <div class="finding-title">
+                    <span><span class="finding-id">{{ finding.id }}</span>: {{ finding.title }}</span>
+                    <div>
+                        <span class="badge badge-medium">Medium</span>
+                    </div>
+                </div>
+                <div class="finding-meta">
+                    <div class="finding-meta-item"><strong>Package:</strong> {{ finding.pkg_name }}</div>
+                    <div class="finding-meta-item"><strong>Installed:</strong> {{ finding.installed_version }}</div>
+                    <div class="finding-meta-item"><strong>CVSS Score:</strong> {{ finding.cvss_score }}</div>
+                    <div class="finding-meta-item"><strong>Fix Available:</strong> {{ finding.fixed_version or "No Patch Available" }}</div>
+                </div>
+                <div class="finding-desc">
+                    {{ finding.description[:300] }}{% if finding.description|length > 300 %}...{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Low Severity Findings Section -->
+    <div class="findings-section">
+        <h2>Low Severity Findings (Review Quarterly)</h2>
+        {% if execution_plan.low_priority.count == 0 %}
+            <div class="empty-state">
+                <div class="empty-state-icon">✓</div>
+                <p class="empty-state-text">No low severity findings detected.</p>
+            </div>
+        {% else %}
+            <p style="color: #6c757d; font-weight: 600; background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #6c757d;">
+                <strong>{{ execution_plan.low_priority.count }}</strong> low severity findings - review quarterly or accept as residual risk.
+            </p>
+            
+            {% for finding in execution_plan.low_priority.items %}
+            <div class="finding-block">
+                <div class="finding-title">
+                    <span><span class="finding-id">{{ finding.id }}</span>: {{ finding.title }}</span>
+                    <div>
+                        <span class="badge badge-low">Low</span>
+                    </div>
+                </div>
+                <div class="finding-meta">
+                    <div class="finding-meta-item"><strong>Package:</strong> {{ finding.pkg_name }}</div>
+                    <div class="finding-meta-item"><strong>Installed:</strong> {{ finding.installed_version }}</div>
+                    <div class="finding-meta-item"><strong>CVSS Score:</strong> {{ finding.cvss_score }}</div>
+                    <div class="finding-meta-item"><strong>Fix Available:</strong> {{ finding.fixed_version or "No Patch Available" }}</div>
+                </div>
+                <div class="finding-desc">
+                    {{ finding.description[:300] }}{% if finding.description|length > 300 %}...{% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -827,7 +632,8 @@
         <ul style="margin-left: 20px; line-height: 1.8;">
             <li>Address all <strong style="color: #dc3545;">{{ execution_plan.full_table_scans.count }} critical findings</strong> within 7 days</li>
             <li>Create tickets for <strong style="color: #fd7e14;">{{ execution_plan.index_scans.count }} high severity findings</strong> for next sprint</li>
-            <li>Review and document accepted risks for medium/low severity findings</li>
+            <li>Schedule <strong style="color: #ffc107;">{{ execution_plan.nested_loops.count }} medium findings</strong> for upcoming maintenance</li>
+            <li>Review and document accepted risks for <strong style="color: #6c757d;">{{ execution_plan.low_priority.count }} low severity</strong> findings</li>
             <li>Implement automated vulnerability scanning in CI/CD pipeline</li>
             <li>Establish regular security review cadence (monthly recommended)</li>
         </ul>
