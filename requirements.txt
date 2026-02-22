@@ -1,27 +1,39 @@
 # Core dependencies
-pydantic>=2.10.0,<3.0.0
+pydantic[email]>=2.10.4,<3.0.0
 python-multipart>=0.0.20
+email-validator>=2.2.0
 
 # PDF/HTML generation
 WeasyPrint>=65.1,<66.0
 Jinja2>=3.1.5,<4.0.0
 ijson>=3.2.0
 
-
 # Presentation generation
 python-pptx>=1.0.2,<2.0.0
 Pillow>=12.1.1,<13.0.0
 lxml>=5.3.0
 
-# Web framework
-fastapi>=0.129.0,<1.0.0
-uvicorn[standard]>=0.34.0
-starlette>=0.41.0
+# Web framework - UPDATED to latest Feb 2026 versions
+fastapi>=0.129.2,<0.130.0      # Was 0.129.0, now 0.129.2
+uvicorn[standard]>=0.41.0      # Was 0.34.0, CRITICAL UPDATE
+starlette>=0.52.1              # Was 0.41.0, CRITICAL UPDATE
+httpx>=0.28.0                  # Required for async HTTP client
+
+# Observability & Logging (2026 standards)
+structlog>=24.4.0
+opentelemetry-api>=1.29.0
+opentelemetry-instrumentation-fastapi>=0.50b0
+prometheus-client>=0.21.0
+
+# Security
+python-jose[cryptography]>=3.4.0  # If adding auth later
+asyncio-throttle>=1.0.0          # Rate limiting
 
 # Development only
 pytest>=8.3.0,<9.0.0
+pytest-asyncio>=0.25.0           # Explicit async test support
 black>=25.1.0,<26.0.0
 flake8>=7.1.0,<8.0.0
 mypy>=1.15.0,<2.0.0
 python-dotenv>=1.0.1
-
+pip-audit>=2.7.0                 # Security scanning
