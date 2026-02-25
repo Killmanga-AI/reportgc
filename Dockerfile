@@ -7,15 +7,18 @@
 FROM python:3.12-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libcairo2-dev \
-    libpango1.0-dev \
-    libgdk-pixbuf-xlib-2.0-dev \
-    libffi-dev \
-    libexpat1-dev \
-    libssl-dev \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libgdk-pixbuf-xlib-2.0-0 \
+    libffi8 \
+    libexpat1 \
     shared-mime-info \
-    && rm -rf /var/lib/apt/lists/*
+    fonts-liberation \
+    fonts-dejavu \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && fc-cache -fv
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -31,6 +34,7 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libcairo2 \
     libpango-1.0-0 \
+    libpangoft2-1.0-0 \
     libgdk-pixbuf-xlib-2.0-0 \
     libffi8 \
     libexpat1 \
